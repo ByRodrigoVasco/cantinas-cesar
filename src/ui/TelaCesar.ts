@@ -3,7 +3,7 @@ import type { SituacaoDaCantina, VisaoGeralDasCantinas } from '../aplicacao/cesa
 import type { Usuario } from '../dominio/usuario/Usuario';
 import { escapar, htmlMensagem, htmlNota } from './formatacao';
 import { htmlLogo } from './tema';
-import type { Mensagem, Tela } from './Tela';
+import type { Mensagem, ReageAFormularios, Tela } from './Tela';
 
 export interface DependenciasDoCesar {
   readonly usuario: Usuario;
@@ -14,7 +14,7 @@ export interface DependenciasDoCesar {
 const CAMPOS = ['nome', 'local', 'responsavel', 'email'] as const;
 
 /** Acesso CESAR: acompanha as cantinas do campus e abre cantinas novas. */
-export class TelaCesar implements Tela {
+export class TelaCesar implements Tela, ReageAFormularios {
   readonly nome = 'cesar';
   private mensagem: Mensagem | null = null;
   // Depois de um erro, o formulário volta preenchido (menos a senha).
@@ -25,10 +25,6 @@ export class TelaCesar implements Tela {
   mostrarMensagem(mensagem: Mensagem | null): void {
     this.mensagem = mensagem;
   }
-
-  aoDigitar(): void {}
-
-  aoClicar(): void {}
 
   aoEnviar(formulario: HTMLFormElement): void {
     const dados = new FormData(formulario);

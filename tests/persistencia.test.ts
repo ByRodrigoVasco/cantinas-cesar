@@ -22,12 +22,12 @@ describe('Salvar e restaurar', () => {
     expect(restaurado.quantidadeEmEstoque).toBe(7);
     expect(restaurado.estaNoCardapio).toBe(false);
     expect(restaurado.foto).toBe('/produtos/coca.jpg');
-    expect(restaurado.precisaRepor()).toBe(false);
+    expect(restaurado.reposicaoNecessaria()).toBe(0);
   });
 
   it('produto feito na hora volta como feito na hora', () => {
     const restaurado = Produto.deDados(ida_e_volta(new Produto('t', 'c1', 'Tapioca', 'Tapiocas', 1000, new PreparoNaHora(6)).paraDados()));
-    expect(restaurado.ehFeitoNaHora).toBe(true);
+    expect(restaurado.nivelDeEstoque()).toBe('sem-controle');
     expect(restaurado.tempoDePreparoMin).toBe(6);
   });
 

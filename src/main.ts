@@ -13,7 +13,6 @@ import { EstoqueDaCantina } from './aplicacao/cantina/EstoqueDaCantina';
 import { GerenciarCardapio } from './aplicacao/cantina/GerenciarCardapio';
 import { PainelDaCantina } from './aplicacao/cantina/PainelDaCantina';
 import { ReporEstoque } from './aplicacao/cantina/ReporEstoque';
-import { ResumoDaCantina } from './aplicacao/cantina/ResumoDaCantina';
 import { CadastrarCantina } from './aplicacao/cesar/CadastrarCantina';
 import { VisaoGeralDasCantinas } from './aplicacao/cesar/VisaoGeralDasCantinas';
 import { AgendarCompra } from './aplicacao/estudante/AgendarCompra';
@@ -60,7 +59,6 @@ const cadastrarProduto = new CadastrarProduto(produtos);
 const gerenciarCardapio = new GerenciarCardapio(produtos);
 const estoqueDaCantina = new EstoqueDaCantina(produtos, movimentacoes, relogio);
 const reporEstoque = new ReporEstoque(produtos, estoqueDaCantina);
-const resumoDaCantina = new ResumoDaCantina(movimentacoes, relogio);
 const painelDaCantina = new PainelDaCantina(pedidos, notificador, estoqueDaCantina);
 const configurarCantina = new ConfigurarCantina(cantinas);
 // Estudante
@@ -90,7 +88,7 @@ function criarTela(usuario: Usuario | undefined): Tela {
     case 'cantina':
       return new TelaCantina({
         usuario, painel: painelDaCantina, cardapio: gerenciarCardapio, estoque: estoqueDaCantina, repor: reporEstoque,
-        resumo: resumoDaCantina, cadastrar: cadastrarProduto, configurar: configurarCantina, relogio,
+        cadastrar: cadastrarProduto, configurar: configurarCantina, relogio,
       });
     case 'estudante':
       return new TelaEstudante({

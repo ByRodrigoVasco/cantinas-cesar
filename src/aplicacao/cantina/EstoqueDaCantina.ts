@@ -1,5 +1,6 @@
 import { ErroDeDominio } from '../../dominio/ErroDeDominio';
 import { novaMovimentacao, type Movimentacao, type MotivoDaMovimentacao } from '../../dominio/estoque/Movimentacao';
+import { resumirPeriodo, type Periodo, type ResumoDoPeriodo } from '../../dominio/estoque/resumirPeriodo';
 import type { Pedido } from '../../dominio/pedido/Pedido';
 import type { Produto } from '../../dominio/produto/Produto';
 import type { Usuario } from '../../dominio/usuario/Usuario';
@@ -24,7 +25,8 @@ const ITENS_NO_HISTORICO = 15;
 
 /**
  * Acesso cantina: o estoque de verdade, inclusive o que acontece fora do app.
- * Cada entrada ou saída muda a quantidade e fica registrada no histórico, com data e hora.
+ * Cada entrada ou saída muda a quantidade e fica registrada no histórico, com data e hora,
+ * e o mesmo histórico alimenta o Resumo do dia, da semana e do mês.
  */
 export class EstoqueDaCantina {
   constructor(
@@ -67,6 +69,11 @@ export class EstoqueDaCantina {
     this.produtos.salvar(produto);
     this.movimentacoes.registrar(movimentacao);
     return movimentacao;
+  }
+
+  /** Aba Resumo: o histórico filtrado e somado para o período (hoje, esta semana, este mês). */
+  resumo(quem: Usuario, periodo: Periodo): ResumoDoPeriodo {
+    return resumirPeriodo(this.movimentacoes.listar(cantinaDe(quem)), periodo, this.relogio.instante());
   }
 
   historico(quem: Usuario, limite = ITENS_NO_HISTORICO): Movimentacao[] {

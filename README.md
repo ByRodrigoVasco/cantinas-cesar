@@ -1,140 +1,67 @@
-# Cantinas do CESAR: 15 minutos, zero fila
+# Cantinas do CESAR
 
-PoC para o Hackathon Relâmpago #1 de FDS 2026.2 (cap. 5, *Engenharia de Software Moderna*).
+App de pedidos antecipados para as cantinas do CESAR School. O estudante agenda o lanche para o
+horário em que vai buscar, a cantina prepara na ordem certa e avisa quando o pedido fica pronto.
+São três acessos: a **gestão do CESAR** cadastra as cantinas, cada **cantina** cuida dos próprios
+pedidos, estoque e cardápio, e o **estudante** pede e avalia o que comeu.
 
-O estudante **agenda o lanche** numa das cantinas do campus para o horário do intervalo. A cantina
-**prepara na ordem certa** e, com **um toque em "Pronto"**, o estudante recebe o aviso e vai direto ao
-balcão, sem fila. Depois, ele **avalia cada item** do pedido.
+> **Hackathon Relâmpago (FDS, cap. 5):** [onde estão os princípios de projeto no código](docs/principios.md).
 
-## Por que esse app
+## Tecnologias
 
-Conversamos com a atendente da cantina (Imperial Padaria) durante o expediente:
+![TypeScript](https://img.shields.io/badge/typescript-%233178C6.svg?style=for-the-badge&logo=typescript&logoColor=white)
+![Vite](https://img.shields.io/badge/vite-%23646CFF.svg?style=for-the-badge&logo=vite&logoColor=white)
+![Vitest](https://img.shields.io/badge/vitest-%236E9F18.svg?style=for-the-badge&logo=vitest&logoColor=white)
+![HTML5](https://img.shields.io/badge/html5-%23E34F26.svg?style=for-the-badge&logo=html5&logoColor=white)
+![CSS3](https://img.shields.io/badge/css3-%231572B6.svg?style=for-the-badge&logo=css3&logoColor=white)
+![GitHub](https://img.shields.io/badge/github-%23181717.svg?style=for-the-badge&logo=github&logoColor=white)
 
-- **Tapioca** é a campeã de vendas, seguida da **coxinha**.
-- Ela anota os pedidos **no papel** e trabalha em dupla.
-- Alguns estudantes já pedem antes ("quero uma coxinha para as X horas") e pagam. Assim **não pegam fila**.
-- Ela pediu: *"teria como comunicar com o aluno quando o pedido dele estivesse pronto"*.
-- Ela pede ao fornecedor **pelo WhatsApp** todos os dias, em duas entregas (manhã e 16h30).
-
-Restrição da equipe: **a cantina não pode ganhar trabalho novo.** Tudo o que dá para automatizar é automático.
-
-## Três acessos
-
-| Acesso | Quem | O que faz |
-|---|---|---|
-| **CESAR** | Gestão do campus | Vê todas as cantinas (cardápio, fila, entregas, nota média) e **cria cantinas novas**, já com a conta de acesso de cada uma. |
-| **Cantina** | Cada cantina tem a sua conta | **Pedidos** (fila automática, um toque em "Pronto"), **Resumo** (vendas, entradas e saídas do dia, da semana e do mês), **Estoque** (avisos do que acabou ou está acabando, registro de venda no balcão, perda e mercadoria que chegou, pedido ao fornecedor pelo WhatsApp, histórico), **Cardápio**, **Novo produto** (com foto) e **Configurações** (cor principal e duas secundárias do cardápio virtual). |
-| **Estudante** | Qualquer pessoa com e-mail `@cesar.school` cria a própria conta | Escolhe a cantina, vê o cardápio com as cores dela e a nota de cada item, agenda o horário, recebe o aviso de pronto, cancela ou pede de novo e **avalia cada item** depois de retirar. |
-
-A primeira cantina, **Imperial Padaria**, já vem cadastrada com a marca, as cores, o cardápio
-fotografado na cantina e as fotos dos produtos.
+- **Linguagem:** TypeScript.
+- **Build e servidor de desenvolvimento:** [Vite](https://vitejs.dev/).
+- **Testes:** [Vitest](https://vitest.dev/).
+- **Interface:** HTML e CSS, no design system do [CESAR School](https://www.cesar.school).
+- **Dados:** armazenamento do navegador, sem backend.
 
 ## Como rodar
 
-Requisito: Node.js 18+.
+### 1. Instalar o Node.js
+
+Baixe a versão **LTS** em [nodejs.org](https://nodejs.org/) e instale.
+
+### 2. Baixar o projeto
+
+```bash
+git clone https://github.com/luan-arruda/Hackground-Rel-mpago.git
+cd Hackground-Rel-mpago
+```
+
+### 3. Instalar as dependências
 
 ```bash
 npm install
-npm run dev      # abre em http://localhost:5173
-npm test         # 67 testes de domínio, casos de uso, permissões, estoque e persistência
 ```
 
-**Contas de demonstração** (em [`dadosDeDemonstracao.ts`](src/infra/dadosDeDemonstracao.ts)). Na tela de
-login, os botões do *Modo demonstração* entram sem digitar nada:
+### 4. Abrir o app
 
-| Acesso | E-mail | Senha |
-|---|---|---|
-| CESAR | `gestao@cesar.school` | `cesar2026` |
-| Cantina (Imperial) | `cantina@imperial.com.br` | `imperial123` |
-| Estudante | `estudante@cesar.school` | `cesar123` |
-
-**Para o vídeo:** abra o estudante numa aba e a cantina em outra. Quando a cantina toca em *Pronto*, o
-aviso aparece na aba do estudante na hora. *Restaurar dados iniciais*, na tela de login, zera tudo.
-
-Não há backend: cantinas, pedidos, estoque, histórico e contas ficam no armazenamento do navegador
-(`localStorage`) e sobrevivem ao recarregar a página. A sessão vale por aba (`sessionStorage`).
-O histórico do mês passado da Imperial é **fictício**, gerado só para o Resumo não abrir vazio
-([`historicoDeExemplo.ts`](src/infra/historicoDeExemplo.ts)). É uma PoC: as senhas não são criptografadas
-e não há servidor validando nada.
-
-## Stack e decisões
-
-- **TypeScript**: os tipos deixam explícitos os contratos (interfaces) que os princípios exigem.
-- **Vite** sem framework de UI: o foco da nota é o projeto das classes.
-- **Vitest**: testa domínio e casos de uso sem navegador, com repositórios em memória e um relógio parado.
-- **Arquitetura em camadas**, e a camada de aplicação **organizada por acesso**:
-
-```
-src/
-├── dominio/        regras puras: Cantina, Usuario, Produto + políticas, Pedido (+ avaliação), Movimentacao, resumo por período
-├── aplicacao/
-│   ├── portas.ts   interfaces de repositório, sessão, notificador, leitor de avisos, relógio
-│   ├── autorizacao.ts  quem pode o quê (exigirPerfil, cantinaDe)
-│   ├── acesso/     Autenticacao, CadastrarEstudante
-│   ├── cesar/      CadastrarCantina, VisaoGeralDasCantinas
-│   ├── cantina/    PainelDaCantina, EstoqueDaCantina, ResumoDaCantina, ReporEstoque, GerenciarCardapio, CadastrarProduto, ConfigurarCantina
-│   └── estudante/  ConsultarCantinas, AgendarCompra, PedidosDoEstudante
-├── infra/          armazenamento do navegador, memória (testes), relógio, dados de demonstração
-├── ui/             uma tela por acesso + login (só desenham e repassam eventos)
-└── main.ts         raiz de composição: único lugar que conhece as classes concretas
+```bash
+npm run dev
 ```
 
-## Onde estão os princípios do capítulo 5
+Acesse [http://localhost:5173](http://localhost:5173) e use os botões do **Modo demonstração**, na tela de login.
 
-| Princípio | Onde | Por que melhora o projeto |
-|---|---|---|
-| **Composição em vez de herança** | [`Produto`](src/dominio/produto/Produto.ts) **tem uma** [`PoliticaDeDisponibilidade`](src/dominio/produto/PoliticaDeDisponibilidade.ts) | "Perecível" e "não perecível" não são subclasses de Produto, e sim comportamentos plugados ([`PreparoNaHora`](src/dominio/produto/PreparoNaHora.ts), [`ControleDeEstoque`](src/dominio/produto/ControleDeEstoque.ts)). Um jeito novo de vender é uma política nova. |
-| **Substituição de Liskov** | As duas políticas cumprem o mesmo contrato, testado em [`produto.test.ts`](tests/produto.test.ts) | Nenhuma lança "não suportado". `PreparoNaHora.liberar()` é um no-op legítimo. |
-| **Segregação de Interfaces** | `Reabastecivel` × `PoliticaDeDisponibilidade`; `Notificador` × `LeitorDeAvisos` em [`portas.ts`](src/aplicacao/portas.ts); `RegistroDeVendas = Pick<EstoqueDaCantina, 'registrarVendaDoApp'>` | Quem é feito na hora não implementa `reabastecer()`. Quem só avisa não precisa ler avisos. O painel e o estudante dependem só do método que registra a venda, não do estoque inteiro. |
-| **Inversão de Dependências** | [`portas.ts`](src/aplicacao/portas.ts) + [`main.ts`](src/main.ts) | Casos de uso dependem de `RepositorioDePedidos`, `Sessao`, `Relogio`… nunca do navegador ou de `Date`. **Prova:** passamos de "tudo em memória" para "tudo no `localStorage`" mudando só `main.ts`. Os testes usam as versões em memória e um `RelogioParado`. |
-| **Aberto/Fechado** | [`NotificadorComposto`](src/infra/notificadores.ts), [`restaurarPolitica`](src/dominio/produto/restaurarPolitica.ts) | Um canal de aviso novo (som, WhatsApp, e-mail) é uma classe nova + uma linha em `main.ts`. Cantina nova é **dado**, não código: o CESAR cria pela tela. |
-| **Ocultamento de informação** | [`Pedido`](src/dominio/pedido/Pedido.ts), [`Usuario`](src/dominio/usuario/Usuario.ts), [`Cantina`](src/dominio/cantina/Cantina.ts) | O status do pedido e as notas são privados e só mudam por métodos que validam a regra. A senha nunca sai de `Usuario` (só `confereSenha()`). As cores da cantina só mudam por `mudarCores()`, que valida o formato. Até para restaurar do armazenamento quem mexe no estado é a própria classe (`deDados()`). |
-| **Responsabilidade Única / Coesão** | Um caso de uso por arquivo, agrupados por acesso | `EstoqueDaCantina` cuida do estoque e do histórico, `ResumoDaCantina` só resume, `PainelDaCantina` só cuida da fila. A UI não tem regra de negócio, e o Resumo e o Estoque da tela ficam em módulos próprios ([`ui/cantina/`](src/ui/cantina)). |
-| **Demeter** | `Produto.nivelDeEstoque()`, `Produto.darBaixa()` | Ninguém escreve `produto.politica.algo()`: quem usa conversa só com `Produto`. |
-| **Integridade conceitual** | Vocabulário único em código, telas e diagrama | Os três acessos têm os mesmos nomes em todo lugar (`cesar`, `cantina`, `estudante`), e as classes usam as palavras da cantina (pedido, cardápio, retirada, entrada, saída). |
+### 5. Rodar os testes
 
-**Permissões nos casos de uso, não na tela** ([`autorizacao.ts`](src/aplicacao/autorizacao.ts)): uma
-cantina não vê nem mexe nos pedidos e produtos de outra, um estudante não cancela nem avalia pedido
-alheio e só o CESAR cria cantinas. Os testes cobrem cada caso ([`casosDeUso.test.ts`](tests/casosDeUso.test.ts)).
+```bash
+npm test
+```
 
-## Usabilidade (heurísticas de Nielsen)
+## Squad
 
-- **Status visível:** selos *Agendado → Pronto! → Retirado*; aviso na tela do estudante; contadores nas abas; faixa de alerta de estoque em todas as abas da cantina.
-- **Linguagem do usuário:** "Feito na hora", "Venda no balcão", "Chegou mercadoria", "Peguei!".
-- **Controle e liberdade:** o estudante cancela (o estoque volta) e muda a nota; a cantina desfaz um "Pronto" tocado por engano.
-- **Prevenção de erros:** horário já vem no mais cedo possível; "+" desabilitado sem estoque; o texto do cardápio fica claro ou escuro sozinho conforme a cor que a cantina escolher; a foto é reduzida antes de salvar.
-- **Reconhecimento em vez de memorização:** o carrinho mostra os itens; cada pedido diz de qual cantina é; o estoque mostra "3 de 12" com barra.
-- **Eficiência:** "Pedir de novo"; com uma cantina só, ela já vem escolhida.
-- **Estética e minimalismo:** pedidos já avaliados vão para "Pedidos anteriores", recolhido.
-- **Mensagens de erro úteis:** *"Não dá tempo de preparar: escolha a partir das 20:12."*, *"Água de coco: só tem 3 no estoque."*
-- **Ajuda:** "Como funciona?" curto e recolhível em cada tela.
-
-## Identidade visual
-
-Segue o design system do [cesar.school](https://www.cesar.school): laranja `#FF6002` e preto, fundo
-branco, Barlow nos títulos e DM Sans no texto, botões em pílula e cartões bem arredondados. Cada cantina
-pinta **só o próprio cardápio** com as cores que escolheu.
-
-O gráfico do Resumo segue um guia de visualização de dados: um eixo só, legenda, dica ao passar o mouse,
-tabela alternativa e as duas cores validadas para daltonismo e contraste. Os avisos de estoque usam cores
-de status sempre acompanhadas de ícone e texto.
-
-## Dados a confirmar
-
-- O **preço da tapioca** (ela não está no cardápio impresso; usamos R$ 10,00).
-- O **preço do Red Bull**, ilegível na foto (usamos R$ 13,60).
-- Os tempos de preparo e as quantidades de estoque, que são estimativas para a demonstração.
-
-## Créditos
-
-- Marcas do CESAR School e da Imperial Padaria, e fotos dos produtos da Imperial: enviadas pela equipe ([`public/`](public)).
-- Ícones: [Lucide](https://lucide.dev) (licença ISC), escolhidos em [icones.js.org](https://icones.js.org) e embutidos em [`icones.ts`](src/ui/icones.ts).
-- Fontes: Barlow e DM Sans (SIL Open Font License), via Fontsource.
-
-## Equipe
-
-| Integrante | Papel |
-|---|---|
-| _a preencher_ | _a preencher_ |
-
-> IA utilizada: Claude Code (Anthropic) para gerar código, com revisão e decisões de projeto da equipe.
+| Foto | Nome | GitHub | LinkedIn |
+|---|---|---|---|
+| <img src="docs/assets/team/anderson-santos.png" alt="Anderson Santos" width="80"> | Anderson Santos | [acampospsantos](https://github.com/acampospsantos) | [andersoncampospsantos](https://www.linkedin.com/in/andersoncampospsantos) |
+| <img src="docs/assets/team/joao-vitor-medeiros.png" alt="João Vitor Medeiros" width="80"> | João Vitor Medeiros | [JvMedeiros7](https://github.com/JvMedeiros7) | [jvmedeiros7](https://www.linkedin.com/in/jvmedeiros7/) |
+| <img src="docs/assets/team/julio-cesar-lins.png" alt="Julio Cesar Lins" width="80"> | Julio Cesar Lins | [Lins-ju](https://github.com/Lins-ju) | [júlio-lins](https://www.linkedin.com/in/j%C3%BAlio-lins-123905182/) |
+| <img src="docs/assets/team/laura-brayner.png" alt="Laura Brayner" width="80"> | Laura Brayner | [laurabrayner](https://github.com/laurabrayner) | [laurabrayner](https://www.linkedin.com/in/laurabrayner) |
+| <img src="docs/assets/team/luan-arruda.png" alt="Luan Arruda" width="80"> | Luan Arruda | [luan-arruda](https://github.com/luan-arruda) | [luan-arruda-548a9534b](https://www.linkedin.com/in/luan-arruda-548a9534b) |
+| <img src="docs/assets/team/rodrigo-vasco.png" alt="Rodrigo Vasco" width="80"> | Rodrigo Vasco | [ByRodrigoVasco](https://github.com/ByRodrigoVasco) | [rodrigo-vlm](https://www.linkedin.com/in/rodrigo-vlm/) |

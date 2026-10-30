@@ -6,7 +6,6 @@ import { EstoqueDaCantina } from '../src/aplicacao/cantina/EstoqueDaCantina';
 import { GerenciarCardapio } from '../src/aplicacao/cantina/GerenciarCardapio';
 import { PainelDaCantina } from '../src/aplicacao/cantina/PainelDaCantina';
 import { ReporEstoque } from '../src/aplicacao/cantina/ReporEstoque';
-import { ResumoDaCantina } from '../src/aplicacao/cantina/ResumoDaCantina';
 import { CadastrarCantina } from '../src/aplicacao/cesar/CadastrarCantina';
 import { VisaoGeralDasCantinas } from '../src/aplicacao/cesar/VisaoGeralDasCantinas';
 import { AgendarCompra } from '../src/aplicacao/estudante/AgendarCompra';
@@ -72,7 +71,6 @@ export function montarCenario() {
     cardapio: new GerenciarCardapio(produtos),
     estoque,
     repor: new ReporEstoque(produtos, estoque),
-    resumo: new ResumoDaCantina(movimentacoes, relogio),
     painel: new PainelDaCantina(pedidos, notificador, estoque),
     configurar: new ConfigurarCantina(cantinas),
     consultar: new ConsultarCantinas(cantinas, produtos, pedidos),
