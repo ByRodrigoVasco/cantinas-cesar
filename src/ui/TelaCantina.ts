@@ -4,7 +4,7 @@ import type { GerenciarCardapio } from '../aplicacao/GerenciarCardapio';
 import type { Relogio } from '../aplicacao/portas';
 import type { ReporEstoque } from '../aplicacao/ReporEstoque';
 import type { Pedido } from '../dominio/pedido/Pedido';
-import { agruparPorCategoria, escapar, formatarPreco, htmlMensagem } from './formatacao';
+import { agruparPorCategoria, escapar, formatarPreco, htmlFoto, htmlMensagem } from './formatacao';
 import { icone, iconeDaCategoria } from './icones';
 import type { Mensagem, Tela } from './Tela';
 
@@ -19,6 +19,7 @@ export interface DependenciasDaCantina {
 type Aba = 'pedidos' | 'cardapio' | 'compras' | 'novo';
 
 export class TelaCantina implements Tela {
+  readonly nome = 'cantina';
   private aba: Aba = 'pedidos';
   private mensagem: Mensagem | null = null;
 
@@ -116,7 +117,7 @@ export class TelaCantina implements Tela {
       pedido.status === 'agendado'
         ? `<small class="${urgente ? 'texto-urgente' : ''}">${urgente ? `${icone('relogio')}Começar agora` : `Começar às ${pedido.horarioParaComecar()}`}</small>
            <button class="botao botao-pronto" data-acao="pronto" data-numero="${pedido.numero}">${icone('confirmar')}Pronto</button>`
-        : `<small>${icone('sino')}${escapar(pedido.cliente)} já foi avisado</small>
+        : `<small>${icone('sino')}Aviso enviado para ${escapar(pedido.cliente)}</small>
            <span>
              <button class="botao-link" data-acao="desfazer" data-numero="${pedido.numero}">Desfazer</button>
              <button class="botao-link" data-acao="entregue" data-numero="${pedido.numero}">Já entreguei</button>
@@ -144,6 +145,7 @@ export class TelaCantina implements Tela {
             .map(
               (produto) => `
               <li class="produto ${produto.estaNoCardapio ? '' : 'produto-fora'}">
+                ${htmlFoto(produto)}
                 <div class="produto-info">
                   <strong>${escapar(produto.nome)}</strong>
                   <small>${escapar(produto.descricaoDisponibilidade())}</small>

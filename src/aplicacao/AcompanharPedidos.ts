@@ -37,9 +37,8 @@ export class AcompanharPedidos {
     return [...totais].map(([nome, quantidade]) => ({ nome, quantidade }));
   }
 
-  pedidosDoCliente(cliente: string): Pedido[] {
-    const nome = cliente.trim().toLowerCase();
-    return this.pedidos.listar().filter((pedido) => pedido.cliente.toLowerCase() === nome);
+  pedidosDoCliente(clienteId: string): Pedido[] {
+    return this.pedidos.listar().filter((pedido) => pedido.clienteId === clienteId);
   }
 
   marcarPronto(numero: number): void {
@@ -47,7 +46,7 @@ export class AcompanharPedidos {
     pedido.marcarPronto();
     this.pedidos.salvar(pedido);
     this.notificador.notificar({
-      cliente: pedido.cliente,
+      clienteId: pedido.clienteId,
       numeroDoPedido: pedido.numero,
       mensagem: `${pedido.cliente}, seu pedido #${pedido.numero} está pronto! Pode retirar no balcão.`,
     });

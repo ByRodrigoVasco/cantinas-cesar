@@ -13,7 +13,13 @@ export interface PoliticaDeDisponibilidade {
   /** Desfaz uma reserva (pedido cancelado). */
   liberar(quantidade: number): void;
   descricao(): string;
+  /** Estado para guardar; restaurado por restaurarPolitica(). */
+  paraDados(): PoliticaSalva;
 }
+
+export type PoliticaSalva =
+  | { readonly tipo: 'feito-na-hora'; readonly tempoDePreparoMin: number }
+  | { readonly tipo: 'estoque'; readonly estoqueIdeal: number; readonly quantidade: number };
 
 /**
  * Só o que tem estoque físico é reabastecido. Interface separada para que quem é feito na

@@ -8,7 +8,11 @@ import { ReporEstoque } from '../src/aplicacao/ReporEstoque';
 import { ErroDeDominio } from '../src/dominio/ErroDeDominio';
 import { Horario } from '../src/dominio/Horario';
 import type { Produto } from '../src/dominio/produto/Produto';
+import { Usuario } from '../src/dominio/usuario/Usuario';
 import { RepositorioDePedidosEmMemoria, RepositorioDeProdutosEmMemoria } from '../src/infra/RepositoriosEmMemoria';
+
+/** Aluno de teste: o id é o nome em minúsculas, para os testes ficarem legíveis. */
+const aluno = (nome: string) => new Usuario(nome.toLowerCase(), nome, `${nome.toLowerCase()}@cesar.school`, 'aluno', 'senha123');
 
 /* Dublês: só funcionam porque os casos de uso dependem de portas, não de classes concretas. */
 class RelogioParado implements Relogio {
@@ -48,7 +52,7 @@ describe('Fluxo da cantina', () => {
 
   const pedir = (cliente: string, horario: string, itens: [Produto, number][]) =>
     agendar.executar({
-      cliente,
+      cliente: aluno(cliente),
       horarioDeRetirada: horario,
       itens: itens.map(([produto, quantidade]) => ({ produtoId: produto.id, quantidade })),
     });
@@ -83,7 +87,7 @@ describe('Fluxo da cantina', () => {
   it('marcar pronto avisa o aluno sem a tia fazer mais nada', () => {
     const pedido = pedir('Ana', '20:30', [[tapioca, 1]]);
     acompanhar.marcarPronto(pedido.numero);
-    expect(notificador.avisos).toEqual([expect.objectContaining({ cliente: 'Ana', numeroDoPedido: pedido.numero })]);
+    expect(notificador.avisos).toEqual([expect.objectContaining({ clienteId: 'ana', numeroDoPedido: pedido.numero })]);
     expect(acompanhar.resumoDoQueFazer()).toEqual([]);
   });
 
@@ -117,7 +121,7 @@ describe('Saídas de emergência (controle e liberdade)', () => {
   const agua = cadastrar.executar({ nome: 'Água', categoria: 'Bebidas', precoEmCentavos: 500, tipo: 'nao-perecivel', estoqueIdeal: 5 });
 
   it('cancelar devolve o estoque e tira da fila', () => {
-    const pedido = agendar.executar({ cliente: 'Ana', horarioDeRetirada: '20:30', itens: [{ produtoId: agua.id, quantidade: 2 }] });
+    const pedido = agendar.executar({ cliente: aluno('Ana'), horarioDeRetirada: '20:30', itens: [{ produtoId: agua.id, quantidade: 2 }] });
     expect(agua.quantidadeEmEstoque).toBe(3);
     cancelar.executar(pedido.numero);
     expect(agua.quantidadeEmEstoque).toBe(5);
@@ -125,13 +129,13 @@ describe('Saídas de emergência (controle e liberdade)', () => {
   });
 
   it('não cancela o que a tia já preparou', () => {
-    const pedido = agendar.executar({ cliente: 'Ana', horarioDeRetirada: '20:30', itens: [{ produtoId: tapioca.id, quantidade: 1 }] });
+    const pedido = agendar.executar({ cliente: aluno('Ana'), horarioDeRetirada: '20:30', itens: [{ produtoId: tapioca.id, quantidade: 1 }] });
     acompanhar.marcarPronto(pedido.numero);
     expect(() => cancelar.executar(pedido.numero)).toThrow('Fale com a tia');
   });
 
   it('a tia desfaz um "pronto" tocado por engano', () => {
-    const pedido = agendar.executar({ cliente: 'Beto', horarioDeRetirada: '20:40', itens: [{ produtoId: tapioca.id, quantidade: 1 }] });
+    const pedido = agendar.executar({ cliente: aluno('Beto'), horarioDeRetirada: '20:40', itens: [{ produtoId: tapioca.id, quantidade: 1 }] });
     acompanhar.marcarPronto(pedido.numero);
     acompanhar.desfazerPronto(pedido.numero);
     expect(pedido.status).toBe('agendado');

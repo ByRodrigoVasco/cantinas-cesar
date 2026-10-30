@@ -5,6 +5,8 @@ export interface Mensagem {
 
 /** Contrato que o App usa para desenhar e repassar eventos; cada tela cuida do próprio estado. */
 export interface Tela {
+  /** Identifica a tela no HTML (classe tela-<nome>) para o estilo. */
+  readonly nome: string;
   html(): string;
   aoClicar(acao: string, elemento: HTMLElement): void;
   aoEnviar(formulario: HTMLFormElement): void;

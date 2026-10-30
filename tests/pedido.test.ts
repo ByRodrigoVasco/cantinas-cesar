@@ -25,7 +25,7 @@ describe('Horario', () => {
 
 describe('Pedido', () => {
   const pedido = () =>
-    new Pedido(1, 'Ana', [item('Tapioca', 2, 6, 1000), item('Água', 1, 0, 500)], Horario.de('20:30'));
+    new Pedido(1, 'ana', 'Ana', [item('Tapioca', 2, 6, 1000), item('Água', 1, 0, 500)], Horario.de('20:30'));
 
   it('soma total e tempo de preparo', () => {
     expect(pedido().totalEmCentavos()).toBe(2500);
@@ -52,8 +52,8 @@ describe('Pedido', () => {
     expect(() => p.marcarPronto()).toThrow(ErroDeDominio);
   });
 
-  it('exige nome e pelo menos um item', () => {
-    expect(() => new Pedido(1, ' ', [item('X', 1, 1)], Horario.de('20:00'))).toThrow(ErroDeDominio);
-    expect(() => new Pedido(1, 'Ana', [], Horario.de('20:00'))).toThrow(ErroDeDominio);
+  it('exige cliente e pelo menos um item', () => {
+    expect(() => new Pedido(1, 'ana', ' ', [item('X', 1, 1)], Horario.de('20:00'))).toThrow(ErroDeDominio);
+    expect(() => new Pedido(1, 'ana', 'Ana', [], Horario.de('20:00'))).toThrow(ErroDeDominio);
   });
 });

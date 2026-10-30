@@ -1,27 +1,37 @@
+import type { Autenticacao } from '../aplicacao/Autenticacao';
 import { ErroDeDominio } from '../dominio/ErroDeDominio';
+import type { Usuario } from '../dominio/usuario/Usuario';
+import { escapar } from './formatacao';
 import { icone } from './icones';
 import type { Tela } from './Tela';
 
 const INTERVALO_DE_ATUALIZACAO_MS = 30_000;
 
+export interface DependenciasDoApp {
+  readonly autenticacao: Autenticacao;
+  /** Decide a tela pelo perfil de quem entrou (ninguém → login). */
+  readonly criarTela: (usuario: Usuario | undefined) => Tela;
+  readonly aoMudarEmOutraAba: (ouvinte: () => void) => void;
+}
+
 /**
- * Monta as duas telas lado a lado e repassa os eventos do navegador para a tela certa.
- * Não conhece regra de negócio nenhuma: só desenha e trata ErroDeDominio como mensagem.
+ * Casca do app: topo com a marca e o usuário, e a tela atual no meio. Repassa os eventos do
+ * navegador para a tela e troca de tela quando alguém entra ou sai. Não tem regra de negócio.
  */
 export class App {
-  private readonly telas: Record<string, Tela>;
+  private tela!: Tela;
+  private idDoUsuarioDaTela: string | undefined | null = null;
 
   constructor(
     private readonly raiz: HTMLElement,
-    aluno: Tela,
-    cantina: Tela,
+    private readonly deps: DependenciasDoApp,
   ) {
-    this.telas = { aluno, cantina };
     this.montar();
     this.ouvirEventos();
     this.atualizar();
-    // O "Começar agora" depende do relógio; só redesenha se ninguém estiver digitando.
-    setInterval(() => this.ninguemDigitando() && this.atualizar(), INTERVALO_DE_ATUALIZACAO_MS);
+    // "Começar agora" depende do relógio, e a outra aba pode ter mudado algo: redesenha sem atrapalhar quem digita.
+    setInterval(() => this.atualizarSeNinguemDigitando(), INTERVALO_DE_ATUALIZACAO_MS);
+    deps.aoMudarEmOutraAba(() => this.atualizarSeNinguemDigitando());
   }
 
   private montar(): void {
@@ -31,75 +41,68 @@ export class App {
           <h1><span>Cantina</span> CESAR</h1>
           <p>com <strong>Imperial</strong> Padaria</p>
         </div>
-        <p class="slogan">15 minutos de intervalo.<br />Zero minutos de fila.</p>
+        <div class="topo-direita" data-area="usuario"></div>
       </header>
-      <main class="paineis">
-        <section class="painel painel-aluno" aria-labelledby="titulo-aluno">
-          <header class="painel-topo">
-            ${icone('aluno')}
-            <div><h2 id="titulo-aluno">App do aluno</h2><p>Peça antes, retire sem fila</p></div>
-          </header>
-          <div class="painel-corpo" data-tela="aluno"></div>
-        </section>
-        <section class="painel painel-cantina" aria-labelledby="titulo-cantina">
-          <header class="painel-topo">
-            ${icone('cantina')}
-            <div><h2 id="titulo-cantina">Painel da cantina</h2><p>Um toque por pedido</p></div>
-          </header>
-          <div class="painel-corpo" data-tela="cantina"></div>
-        </section>
-      </main>`;
+      <main class="conteudo" data-area="tela"></main>`;
   }
 
   private ouvirEventos(): void {
     this.raiz.addEventListener('click', (evento) => {
       const alvo = (evento.target as HTMLElement).closest<HTMLElement>('[data-acao]');
-      const tela = alvo && this.telaDe(alvo);
-      if (alvo && tela) this.executar(tela, () => tela.aoClicar(alvo.dataset.acao ?? '', alvo));
+      if (!alvo) return;
+      if (alvo.dataset.acao === 'sair') {
+        this.deps.autenticacao.sair();
+        this.atualizar();
+        return;
+      }
+      this.executar(() => this.tela.aoClicar(alvo.dataset.acao ?? '', alvo));
     });
     this.raiz.addEventListener('submit', (evento) => {
       evento.preventDefault();
       const formulario = evento.target as HTMLFormElement;
-      const tela = this.telaDe(formulario);
-      if (tela) this.executar(tela, () => tela.aoEnviar(formulario));
+      this.executar(() => this.tela.aoEnviar(formulario));
     });
     this.raiz.addEventListener('input', (evento) => {
       const campo = evento.target as HTMLInputElement;
-      if (campo.dataset.campo) this.telaDe(campo)?.aoDigitar(campo.dataset.campo, campo.value);
-    });
-    // Ao sair do campo de nome, "Meus pedidos" é redesenhado para o aluno certo.
-    this.raiz.addEventListener('change', (evento) => {
-      if ((evento.target as HTMLElement).dataset.campo === 'nome') this.atualizar();
+      if (campo.dataset.campo) this.tela.aoDigitar(campo.dataset.campo, campo.value);
     });
   }
 
-  private telaDe(elemento: Element): Tela | undefined {
-    const nome = elemento.closest<HTMLElement>('[data-tela]')?.dataset.tela;
-    return nome ? this.telas[nome] : undefined;
-  }
-
-  private executar(tela: Tela, acao: () => void): void {
-    tela.mostrarMensagem(null);
+  private executar(acao: () => void): void {
+    this.tela.mostrarMensagem(null);
     try {
       acao();
     } catch (erro) {
       if (!(erro instanceof ErroDeDominio)) throw erro;
-      tela.mostrarMensagem({ tipo: 'erro', texto: erro.message });
+      this.tela.mostrarMensagem({ tipo: 'erro', texto: erro.message });
     }
     this.atualizar();
   }
 
   private atualizar(): void {
-    for (const [nome, tela] of Object.entries(this.telas)) {
-      const corpo = this.raiz.querySelector<HTMLElement>(`[data-tela="${nome}"]`);
-      if (!corpo) continue;
-      const rolagem = corpo.scrollTop;
-      corpo.innerHTML = tela.html();
-      corpo.scrollTop = rolagem;
+    const usuario = this.deps.autenticacao.usuarioAtual();
+    const trocouDeUsuario = usuario?.id !== this.idDoUsuarioDaTela;
+    if (trocouDeUsuario) {
+      this.tela = this.deps.criarTela(usuario);
+      this.idDoUsuarioDaTela = usuario?.id;
     }
+    this.area('usuario').innerHTML = usuario
+      ? `<span class="saudacao">${icone(usuario.perfil)}Olá, <strong>${escapar(usuario.primeiroNome)}</strong></span>
+         <button class="botao botao-sair" data-acao="sair">${icone('sair')}Sair</button>`
+      : `<p class="slogan">15 minutos de intervalo.<br />Zero minutos de fila.</p>`;
+
+    const rolagem = trocouDeUsuario ? 0 : window.scrollY;
+    this.area('tela').innerHTML = `<div class="tela tela-${this.tela.nome}">${this.tela.html()}</div>`;
+    window.scrollTo(0, rolagem);
   }
 
-  private ninguemDigitando(): boolean {
-    return !(document.activeElement instanceof HTMLInputElement);
+  private atualizarSeNinguemDigitando(): void {
+    if (!(document.activeElement instanceof HTMLInputElement)) this.atualizar();
+  }
+
+  private area(nome: string): HTMLElement {
+    const elemento = this.raiz.querySelector<HTMLElement>(`[data-area="${nome}"]`);
+    if (!elemento) throw new Error(`Área "${nome}" não encontrada.`);
+    return elemento;
   }
 }

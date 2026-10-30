@@ -1,5 +1,16 @@
 import { ErroDeDominio } from '../ErroDeDominio';
-import { ehReabastecivel, type PoliticaDeDisponibilidade } from './PoliticaDeDisponibilidade';
+import { ehReabastecivel, type PoliticaDeDisponibilidade, type PoliticaSalva } from './PoliticaDeDisponibilidade';
+import { restaurarPolitica } from './restaurarPolitica';
+
+export interface ProdutoSalvo {
+  readonly id: string;
+  readonly nome: string;
+  readonly categoria: string;
+  readonly precoEmCentavos: number;
+  readonly foto?: string;
+  readonly noCardapio: boolean;
+  readonly politica: PoliticaSalva;
+}
 
 /**
  * Item vendido pela cantina. Quem usa Produto conversa só com ele — nunca com
@@ -14,6 +25,8 @@ export class Produto {
     readonly categoria: string,
     readonly precoEmCentavos: number,
     private readonly politica: PoliticaDeDisponibilidade,
+    /** Caminho da foto, opcional: produto sem foto aparece com um marcador neutro. */
+    readonly foto?: string,
   ) {
     if (!nome.trim()) throw new ErroDeDominio('Produto precisa de um nome.');
     if (!Number.isInteger(precoEmCentavos) || precoEmCentavos <= 0) {
@@ -78,5 +91,25 @@ export class Produto {
 
   descricaoDisponibilidade(): string {
     return this.noCardapio ? this.politica.descricao() : 'Fora do cardápio hoje';
+  }
+
+  paraDados(): ProdutoSalvo {
+    return {
+      id: this.id,
+      nome: this.nome,
+      categoria: this.categoria,
+      precoEmCentavos: this.precoEmCentavos,
+      foto: this.foto,
+      noCardapio: this.noCardapio,
+      politica: this.politica.paraDados(),
+    };
+  }
+
+  static deDados(dados: ProdutoSalvo): Produto {
+    const produto = new Produto(
+      dados.id, dados.nome, dados.categoria, dados.precoEmCentavos, restaurarPolitica(dados.politica), dados.foto,
+    );
+    produto.noCardapio = dados.noCardapio;
+    return produto;
   }
 }

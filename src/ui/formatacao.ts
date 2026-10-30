@@ -13,6 +13,13 @@ export function escapar(texto: string): string {
   return texto.replace(/[&<>"']/g, (caractere) => ENTIDADES[caractere]);
 }
 
+/** Foto do produto ou, sem foto, a inicial do nome num quadrado neutro. */
+export function htmlFoto(produto: { readonly nome: string; readonly foto?: string }): string {
+  return produto.foto
+    ? `<img class="produto-foto" src="${escapar(produto.foto)}" alt="" loading="lazy" />`
+    : `<span class="produto-foto produto-foto-vazia" aria-hidden="true">${escapar(produto.nome.charAt(0))}</span>`;
+}
+
 export function htmlMensagem(mensagem: Mensagem | null): string {
   if (!mensagem) return '';
   return `<p class="mensagem mensagem-${mensagem.tipo}" role="${mensagem.tipo === 'erro' ? 'alert' : 'status'}">${escapar(mensagem.texto)}</p>`;

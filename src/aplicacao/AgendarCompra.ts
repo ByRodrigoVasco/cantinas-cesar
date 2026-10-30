@@ -2,6 +2,7 @@ import { ErroDeDominio } from '../dominio/ErroDeDominio';
 import { Horario } from '../dominio/Horario';
 import { Pedido, type ItemPedido } from '../dominio/pedido/Pedido';
 import type { Produto } from '../dominio/produto/Produto';
+import type { Usuario } from '../dominio/usuario/Usuario';
 import type { RepositorioDePedidos, RepositorioDeProdutos, Relogio } from './portas';
 
 export interface ItemSolicitado {
@@ -10,7 +11,7 @@ export interface ItemSolicitado {
 }
 
 export interface SolicitacaoDeCompra {
-  cliente: string;
+  cliente: Usuario;
   horarioDeRetirada: string;
   itens: ItemSolicitado[];
 }
@@ -30,7 +31,8 @@ export class AgendarCompra {
     }));
     const pedido = new Pedido(
       this.pedidos.proximoNumero(),
-      solicitacao.cliente.trim(),
+      solicitacao.cliente.id,
+      solicitacao.cliente.primeiroNome,
       escolhidos.map(({ produto, quantidade }) => this.itemDoPedido(produto, quantidade)),
       Horario.de(solicitacao.horarioDeRetirada),
     );

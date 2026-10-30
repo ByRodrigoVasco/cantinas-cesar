@@ -2,16 +2,19 @@ import type { AcompanharPedidos } from '../aplicacao/AcompanharPedidos';
 import type { AgendarCompra, ItemSolicitado } from '../aplicacao/AgendarCompra';
 import type { CancelarPedido } from '../aplicacao/CancelarPedido';
 import type { GerenciarCardapio } from '../aplicacao/GerenciarCardapio';
-import type { Aviso, Relogio } from '../aplicacao/portas';
+import type { LeitorDeAvisos, Relogio } from '../aplicacao/portas';
 import { ErroDeDominio } from '../dominio/ErroDeDominio';
 import { Horario } from '../dominio/Horario';
 import type { Pedido, StatusPedido } from '../dominio/pedido/Pedido';
 import type { Produto } from '../dominio/produto/Produto';
-import { agruparPorCategoria, escapar, formatarPreco, htmlMensagem } from './formatacao';
+import type { Usuario } from '../dominio/usuario/Usuario';
+import { agruparPorCategoria, escapar, formatarPreco, htmlFoto, htmlMensagem } from './formatacao';
 import { icone, iconeDaCategoria } from './icones';
 import type { Mensagem, Tela } from './Tela';
 
 export interface DependenciasDoAluno {
+  readonly usuario: Usuario;
+  readonly avisos: LeitorDeAvisos;
   readonly cardapio: GerenciarCardapio;
   readonly agendarCompra: AgendarCompra;
   readonly cancelarPedido: CancelarPedido;
@@ -30,18 +33,13 @@ const ROTULO_DO_STATUS: Record<StatusPedido, string> = {
 const MINUTOS_DE_ANTECEDENCIA = 15;
 
 export class TelaAluno implements Tela {
-  private nome = '';
+  readonly nome = 'aluno';
   private horario: string;
   private readonly carrinho = new Map<string, number>();
-  private readonly avisos: Aviso[] = [];
   private mensagem: Mensagem | null = null;
 
   constructor(private readonly deps: DependenciasDoAluno) {
     this.horario = deps.relogio.agora().mais(MINUTOS_DE_ANTECEDENCIA).toString();
-  }
-
-  receberAviso(aviso: Aviso): void {
-    this.avisos.push(aviso);
   }
 
   mostrarMensagem(mensagem: Mensagem | null): void {
@@ -49,7 +47,6 @@ export class TelaAluno implements Tela {
   }
 
   aoDigitar(campo: string, valor: string): void {
-    if (campo === 'nome') this.nome = valor;
     if (campo === 'horario') this.horario = valor;
   }
 
@@ -72,7 +69,7 @@ export class TelaAluno implements Tela {
 
   aoEnviar(): void {
     const pedido = this.deps.agendarCompra.executar({
-      cliente: this.nome,
+      cliente: this.deps.usuario,
       horarioDeRetirada: this.horario,
       itens: this.itensDoCarrinho(),
     });
@@ -85,6 +82,7 @@ export class TelaAluno implements Tela {
 
   html(): string {
     return `
+      <h2 class="titulo-tela">Cardápio de hoje</h2>
       <details class="ajuda">
         <summary>Como funciona?</summary>
         <ol>
@@ -93,10 +91,6 @@ export class TelaAluno implements Tela {
           <li>Quando estiver pronto, aparece um aviso aqui. É só buscar no balcão e pagar.</li>
         </ol>
       </details>
-      <label class="campo">
-        <span>Seu nome</span>
-        <input data-campo="nome" value="${escapar(this.nome)}" placeholder="Como a tia vai chamar você" autocomplete="given-name" />
-      </label>
       ${htmlMensagem(this.mensagem)}
       ${this.htmlAvisos()}
       ${this.htmlMeusPedidos()}
@@ -142,15 +136,14 @@ export class TelaAluno implements Tela {
   }
 
   private meusPedidos(): Pedido[] {
-    if (!this.nome.trim()) return [];
-    return this.deps.pedidos.pedidosDoCliente(this.nome).sort((a, b) => b.numero - a.numero);
+    return this.deps.pedidos.pedidosDoCliente(this.deps.usuario.id).sort((a, b) => b.numero - a.numero);
   }
 
   private htmlAvisos(): string {
     return this.meusPedidos()
       .filter((pedido) => pedido.status === 'pronto')
       .map((pedido) => {
-        const aviso = this.avisos.findLast((a) => a.numeroDoPedido === pedido.numero);
+        const aviso = this.deps.avisos.avisosPara(this.deps.usuario.id).find((a) => a.numeroDoPedido === pedido.numero);
         return `
           <div class="aviso-pronto" role="status">
             ${icone('sino')}
@@ -202,6 +195,7 @@ export class TelaAluno implements Tela {
     const cabeMais = produto.estaDisponivel(noCarrinho + 1);
     return `
       <li class="produto ${produto.estaDisponivel() ? '' : 'produto-esgotado'}">
+        ${htmlFoto(produto)}
         <div class="produto-info">
           <strong>${escapar(produto.nome)}</strong>
           <small>${escapar(produto.descricaoDisponibilidade())}</small>

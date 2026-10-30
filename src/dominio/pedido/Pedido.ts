@@ -1,5 +1,5 @@
 import { ErroDeDominio } from '../ErroDeDominio';
-import type { Horario } from '../Horario';
+import { Horario } from '../Horario';
 
 export type StatusPedido = 'agendado' | 'pronto' | 'retirado' | 'cancelado';
 
@@ -10,6 +10,15 @@ export interface ItemPedido {
   readonly quantidade: number;
   readonly precoUnitarioEmCentavos: number;
   readonly tempoDePreparoMin: number;
+}
+
+export interface PedidoSalvo {
+  readonly numero: number;
+  readonly clienteId: string;
+  readonly cliente: string;
+  readonly itens: readonly ItemPedido[];
+  readonly horarioDeRetirada: string;
+  readonly status: StatusPedido;
 }
 
 /**
@@ -23,11 +32,13 @@ export class Pedido {
 
   constructor(
     readonly numero: number,
+    readonly clienteId: string,
+    /** Nome que a tia chama no balcão. */
     readonly cliente: string,
-    itens: ItemPedido[],
+    itens: readonly ItemPedido[],
     readonly horarioDeRetirada: Horario,
   ) {
-    if (!cliente.trim()) throw new ErroDeDominio('Informe seu nome para a tia chamar você.');
+    if (!clienteId || !cliente.trim()) throw new ErroDeDominio('Entre na sua conta para fazer o pedido.');
     if (itens.length === 0) throw new ErroDeDominio('O pedido está vazio.');
     this.itens = Object.freeze([...itens]);
   }
@@ -75,5 +86,22 @@ export class Pedido {
       throw new ErroDeDominio(`Pedido #${this.numero} já foi preparado e não pode ser cancelado. Fale com a tia.`);
     }
     this._status = 'cancelado';
+  }
+
+  paraDados(): PedidoSalvo {
+    return {
+      numero: this.numero,
+      clienteId: this.clienteId,
+      cliente: this.cliente,
+      itens: this.itens,
+      horarioDeRetirada: this.horarioDeRetirada.toString(),
+      status: this._status,
+    };
+  }
+
+  static deDados(dados: PedidoSalvo): Pedido {
+    const pedido = new Pedido(dados.numero, dados.clienteId, dados.cliente, dados.itens, Horario.de(dados.horarioDeRetirada));
+    pedido._status = dados.status;
+    return pedido;
   }
 }
