@@ -6,13 +6,13 @@ import type { Cantina } from '../dominio/cantina/Cantina';
 import { ErroDeDominio } from '../dominio/ErroDeDominio';
 import { Horario } from '../dominio/Horario';
 import type { Pedido, StatusPedido } from '../dominio/pedido/Pedido';
-import { mediaGeral, type ResumoDeAvaliacao } from '../dominio/pedido/resumirAvaliacoes';
+import type { ResumoDeAvaliacao } from '../dominio/pedido/resumirAvaliacoes';
 import type { Produto } from '../dominio/produto/Produto';
 import type { Usuario } from '../dominio/usuario/Usuario';
 import { agruparPorCategoria, escapar, formatarPreco, htmlFoto, htmlMensagem, htmlNota } from './formatacao';
 import { icone, iconeDaCategoria } from './icones';
 import { estiloDoTema, htmlCabecalhoDaCantina, htmlLogo } from './tema';
-import type { Mensagem, Tela } from './Tela';
+import type { Mensagem, ReageACliques, ReageADigitacao, ReageAFormularios, Tela } from './Tela';
 
 export interface DependenciasDoEstudante {
   readonly usuario: Usuario;
@@ -36,7 +36,7 @@ const NOTAS = [1, 2, 3, 4, 5];
 const MINUTOS_DE_ANTECEDENCIA = 15;
 
 /** Acesso estudante: escolhe a cantina, agenda, acompanha, retira e avalia. */
-export class TelaEstudante implements Tela {
+export class TelaEstudante implements Tela, ReageACliques, ReageAFormularios, ReageADigitacao {
   readonly nome = 'estudante';
   private cantinaEscolhida: string | undefined;
   private horario: string;
@@ -125,8 +125,8 @@ export class TelaEstudante implements Tela {
   /** Com uma cantina só no campus, ela já vem escolhida: um toque a menos. */
   private cantinaAtual(): Cantina | undefined {
     if (this.cantinaEscolhida) return this.deps.cantinas.buscar(this.cantinaEscolhida);
-    const todas = this.deps.cantinas.listar();
-    return todas.length === 1 ? todas[0] : undefined;
+    const todas = this.deps.cantinas.vitrine();
+    return todas.length === 1 ? todas[0].cantina : undefined;
   }
 
   private trocarDeCantina(): void {
@@ -196,9 +196,7 @@ export class TelaEstudante implements Tela {
   }
 
   private htmlEscolhaDeCantina(): string {
-    const cartoes = this.deps.cantinas.listar().map((cantina) => {
-      const nota = mediaGeral(this.deps.cantinas.avaliacoesDoCardapio(cantina.id).values());
-      const itens = this.deps.cantinas.cardapioDoDia(cantina.id).length;
+    const cartoes = this.deps.cantinas.vitrine().map(({ cantina, itensHoje: itens, avaliacao: nota }) => {
       return `
         <button class="cartao-cantina" data-acao="escolher-cantina" data-id="${cantina.id}" style="${estiloDoTema(cantina.cores)}">
           ${htmlLogo(cantina)}
@@ -220,7 +218,7 @@ export class TelaEstudante implements Tela {
     const emAndamento = pedidos.filter((p) => p.estaNaFila());
     const paraAvaliar = pedidos.filter((p) => p.status === 'retirado' && p.itens.some((i) => !p.notaDoItem(i.produtoId)));
     const anteriores = pedidos.filter((p) => !emAndamento.includes(p) && !paraAvaliar.includes(p));
-    const nomes = new Map(this.deps.cantinas.listar().map((c) => [c.id, c.nome]));
+    const nomes = new Map(this.deps.cantinas.vitrine().map(({ cantina }) => [cantina.id, cantina.nome]));
     const linhas = (lista: Pedido[]) => lista.map((pedido) => this.htmlMeuPedido(pedido, nomes.get(pedido.cantinaId) ?? '')).join('');
     return `
       ${emAndamento.length || paraAvaliar.length ? `<h3 class="subtitulo">Meus pedidos</h3>` : ''}
@@ -282,7 +280,7 @@ export class TelaEstudante implements Tela {
   private htmlCardapio(cantina: Cantina): string {
     const notas = this.deps.cantinas.avaliacoesDoCardapio(cantina.id);
     const grupos = agruparPorCategoria(this.deps.cantinas.cardapioDoDia(cantina.id));
-    const trocar = this.deps.cantinas.listar().length > 1
+    const trocar = this.deps.cantinas.vitrine().length > 1
       ? `<button class="botao botao-trocar" data-acao="trocar-cantina">${icone('voltar')}Trocar</button>`
       : '';
     const secoes = [...grupos].map(

@@ -25,4 +25,8 @@ export class PreparoNaHora implements PoliticaDeDisponibilidade {
   paraDados(): PoliticaSalva {
     return { tipo: 'feito-na-hora', tempoDePreparoMin: this.tempoDePreparoMin };
   }
+
+  static deDados(salva: Extract<PoliticaSalva, { tipo: 'feito-na-hora' }>): PreparoNaHora {
+    return new PreparoNaHora(salva.tempoDePreparoMin);
+  }
 }

@@ -3,7 +3,7 @@ import type { CadastrarEstudante } from '../aplicacao/acesso/CadastrarEstudante'
 import type { NomeDoIcone } from './icones';
 import { icone } from './icones';
 import { escapar, htmlMensagem } from './formatacao';
-import type { Mensagem, Tela } from './Tela';
+import type { Mensagem, ReageACliques, ReageAFormularios, Tela } from './Tela';
 
 interface Credenciais {
   readonly email: string;
@@ -28,7 +28,7 @@ const ATALHOS: [Acesso, NomeDoIcone, string][] = [
   ['cesar', 'cesar', 'Gestão CESAR'],
 ];
 
-export class TelaLogin implements Tela {
+export class TelaLogin implements Tela, ReageACliques, ReageAFormularios {
   readonly nome = 'login';
   private modo: Modo = 'entrar';
   private mensagem: Mensagem | null = null;
@@ -41,8 +41,6 @@ export class TelaLogin implements Tela {
   mostrarMensagem(mensagem: Mensagem | null): void {
     this.mensagem = mensagem;
   }
-
-  aoDigitar(): void {}
 
   aoClicar(acao: string, elemento: HTMLElement): void {
     if (acao === 'modo') this.modo = elemento.dataset.modo as Modo;
@@ -73,8 +71,8 @@ export class TelaLogin implements Tela {
     return `
       <section class="destaque-login">
         <p class="sobretitulo">Cantinas do CESAR</p>
-        <h2>15 minutos de intervalo.<br />Zero minutos de fila.</h2>
-        <p>Peça antes, retire na hora e aproveite o intervalo.</p>
+        <h2>Peça antes.<br />Retire pronto.</h2>
+        <p>Agende o lanche, acompanhe o pedido e retire no balcão.</p>
       </section>
       <section class="cartao cartao-login">
         <h2 class="titulo-tela">${entrando ? 'Entrar' : 'Criar conta de estudante'}</h2>

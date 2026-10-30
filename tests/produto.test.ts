@@ -32,7 +32,7 @@ describe('Produto feito na hora', () => {
     produto.reservar(50);
     expect(produto.estaDisponivel(50)).toBe(true);
     expect(produto.tempoDePreparoMin).toBe(6);
-    expect(produto.precisaRepor()).toBe(false);
+    expect(produto.reposicaoNecessaria()).toBe(0);
   });
 
   it('não pode ser reabastecido', () => {
@@ -54,9 +54,8 @@ describe('Produto pronta-entrega', () => {
   });
 
   it('entra na lista de compras abaixo da metade do ideal e sugere completar', () => {
-    expect(refri(5).precisaRepor()).toBe(false);
-    expect(refri(4).precisaRepor()).toBe(true);
-    expect(refri(4).sugestaoDeReposicao()).toBe(6);
+    expect(refri(5).reposicaoNecessaria()).toBe(0);
+    expect(refri(4).reposicaoNecessaria()).toBe(6);
   });
 });
 

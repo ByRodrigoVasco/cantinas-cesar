@@ -3,7 +3,7 @@ import { ErroDeDominio } from '../dominio/ErroDeDominio';
 import type { Perfil, Usuario } from '../dominio/usuario/Usuario';
 import { escapar } from './formatacao';
 import { icone } from './icones';
-import type { Tela } from './Tela';
+import { reageAArquivos, reageACliques, reageADigitacao, reageAFormularios, type Tela } from './Tela';
 
 const INTERVALO_DE_ATUALIZACAO_MS = 30_000;
 
@@ -61,21 +61,25 @@ export class App {
         this.atualizar();
         return;
       }
-      this.executar(() => this.tela.aoClicar(alvo.dataset.acao ?? '', alvo));
+      const tela = this.tela;
+      if (reageACliques(tela)) this.executar(() => tela.aoClicar(alvo.dataset.acao ?? '', alvo));
     });
     this.raiz.addEventListener('submit', (evento) => {
       evento.preventDefault();
       const formulario = evento.target as HTMLFormElement;
-      this.executar(() => this.tela.aoEnviar(formulario));
+      const tela = this.tela;
+      if (reageAFormularios(tela)) this.executar(() => tela.aoEnviar(formulario));
     });
     this.raiz.addEventListener('input', (evento) => {
       const campo = evento.target as HTMLInputElement;
-      if (campo.dataset.campo && campo.type !== 'file') this.tela.aoDigitar(campo.dataset.campo, campo.value);
+      if (campo.dataset.campo && campo.type !== 'file' && reageADigitacao(this.tela)) {
+        this.tela.aoDigitar(campo.dataset.campo, campo.value);
+      }
     });
     this.raiz.addEventListener('change', (evento) => {
       const campo = evento.target as HTMLInputElement;
       const arquivo = campo.type === 'file' ? campo.files?.[0] : undefined;
-      if (arquivo && campo.dataset.campo && this.tela.aoEscolherArquivo) {
+      if (arquivo && campo.dataset.campo && reageAArquivos(this.tela)) {
         void this.executarAssincrono(this.tela.aoEscolherArquivo(campo.dataset.campo, arquivo));
       }
     });
