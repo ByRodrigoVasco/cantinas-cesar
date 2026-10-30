@@ -4,7 +4,8 @@ import type { GerenciarCardapio } from '../aplicacao/GerenciarCardapio';
 import type { Relogio } from '../aplicacao/portas';
 import type { ReporEstoque } from '../aplicacao/ReporEstoque';
 import type { Pedido } from '../dominio/pedido/Pedido';
-import { agruparPorCategoria, escapar, formatarPreco, htmlMensagem, iconeDaCategoria } from './formatacao';
+import { agruparPorCategoria, escapar, formatarPreco, htmlMensagem } from './formatacao';
+import { icone, iconeDaCategoria } from './icones';
 import type { Mensagem, Tela } from './Tela';
 
 export interface DependenciasDaCantina {
@@ -67,7 +68,7 @@ export class TelaCantina implements Tela {
       <details class="ajuda">
         <summary>Como funciona?</summary>
         <ul>
-          <li><b>Pedidos:</b> chegam sozinhos, na ordem de começar a preparar. Toque em <b>Pronto ✓</b> e o aluno é avisado.</li>
+          <li><b>Pedidos:</b> chegam sozinhos, na ordem de começar a preparar. Toque em <b>Pronto</b> e o aluno é avisado.</li>
           <li><b>Cardápio:</b> o estoque baixa sozinho a cada venda. Desligue só o que acabou e não volta hoje.</li>
           <li><b>Compras:</b> a lista para o fornecedor já vem pronta. Quando a entrega chegar, toque em repor.</li>
         </ul>
@@ -95,7 +96,7 @@ export class TelaCantina implements Tela {
   private htmlPedidos(): string {
     const fila = this.deps.pedidos.filaDaCantina();
     if (fila.length === 0) {
-      return `<p class="vazio">Nenhum pedido agendado ainda. ☕<br />Os pedidos dos alunos aparecem aqui sozinhos, na ordem de preparo.</p>`;
+      return `<p class="vazio">${icone('vazio')}Nenhum pedido agendado ainda.<br />Os pedidos dos alunos aparecem aqui sozinhos, na ordem de preparo.</p>`;
     }
     const resumo = this.deps.pedidos.resumoDoQueFazer();
     const htmlResumo = resumo.length
@@ -113,9 +114,9 @@ export class TelaCantina implements Tela {
     const urgente = pedido.status === 'agendado' && jaDeveComecar;
     const acao =
       pedido.status === 'agendado'
-        ? `<small class="${urgente ? 'texto-urgente' : ''}">${urgente ? '⏰ Começar agora' : `Começar às ${pedido.horarioParaComecar()}`}</small>
-           <button class="botao botao-pronto" data-acao="pronto" data-numero="${pedido.numero}">Pronto ✓</button>`
-        : `<small>🔔 ${escapar(pedido.cliente)} já foi avisado</small>
+        ? `<small class="${urgente ? 'texto-urgente' : ''}">${urgente ? `${icone('relogio')}Começar agora` : `Começar às ${pedido.horarioParaComecar()}`}</small>
+           <button class="botao botao-pronto" data-acao="pronto" data-numero="${pedido.numero}">${icone('confirmar')}Pronto</button>`
+        : `<small>${icone('sino')}${escapar(pedido.cliente)} já foi avisado</small>
            <span>
              <button class="botao-link" data-acao="desfazer" data-numero="${pedido.numero}">Desfazer</button>
              <button class="botao-link" data-acao="entregue" data-numero="${pedido.numero}">Já entreguei</button>
@@ -160,7 +161,7 @@ export class TelaCantina implements Tela {
 
   private htmlCompras(): string {
     const lista = this.deps.repor.listaDeCompras();
-    if (lista.length === 0) return `<p class="vazio">✅ Estoque em dia. Nada para pedir ao fornecedor.</p>`;
+    if (lista.length === 0) return `<p class="vazio">${icone('confirmar')}Estoque em dia. Nada para pedir ao fornecedor.</p>`;
     const whatsapp = `https://wa.me/?text=${encodeURIComponent(this.deps.repor.mensagemParaFornecedor())}`;
     const linhas = lista.map(
       ({ produto, quantidade }) => `

@@ -1,4 +1,5 @@
 import { ErroDeDominio } from '../dominio/ErroDeDominio';
+import { icone } from './icones';
 import type { Tela } from './Tela';
 
 const INTERVALO_DE_ATUALIZACAO_MS = 30_000;
@@ -26,20 +27,23 @@ export class App {
   private montar(): void {
     this.raiz.innerHTML = `
       <header class="topo">
-        <h1>Cantina CESAR</h1>
-        <p>15 minutos de intervalo. Zero minutos de fila.</p>
+        <div class="marca">
+          <h1><span>Cantina</span> CESAR</h1>
+          <p>com <strong>Imperial</strong> Padaria</p>
+        </div>
+        <p class="slogan">15 minutos de intervalo.<br />Zero minutos de fila.</p>
       </header>
       <main class="paineis">
         <section class="painel painel-aluno" aria-labelledby="titulo-aluno">
           <header class="painel-topo">
-            <span class="painel-icone" aria-hidden="true">📱</span>
+            ${icone('aluno')}
             <div><h2 id="titulo-aluno">App do aluno</h2><p>Peça antes, retire sem fila</p></div>
           </header>
           <div class="painel-corpo" data-tela="aluno"></div>
         </section>
         <section class="painel painel-cantina" aria-labelledby="titulo-cantina">
           <header class="painel-topo">
-            <span class="painel-icone" aria-hidden="true">🧑‍🍳</span>
+            ${icone('cantina')}
             <div><h2 id="titulo-cantina">Painel da cantina</h2><p>Um toque por pedido</p></div>
           </header>
           <div class="painel-corpo" data-tela="cantina"></div>

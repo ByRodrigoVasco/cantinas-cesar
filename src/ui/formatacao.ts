@@ -13,19 +13,6 @@ export function escapar(texto: string): string {
   return texto.replace(/[&<>"']/g, (caractere) => ENTIDADES[caractere]);
 }
 
-const ICONES: Record<string, string> = {
-  Tapiocas: '🫓',
-  Salgados: '🥟',
-  'Hot Dog': '🌭',
-  'Sanduíches naturais': '🥪',
-  Sobremesas: '🍰',
-  Bebidas: '🥤',
-};
-
-export function iconeDaCategoria(categoria: string): string {
-  return ICONES[categoria] ?? '🍽️';
-}
-
 export function htmlMensagem(mensagem: Mensagem | null): string {
   if (!mensagem) return '';
   return `<p class="mensagem mensagem-${mensagem.tipo}" role="${mensagem.tipo === 'erro' ? 'alert' : 'status'}">${escapar(mensagem.texto)}</p>`;

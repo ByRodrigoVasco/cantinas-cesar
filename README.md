@@ -3,7 +3,7 @@
 PoC para o Hackathon Relâmpago #1 de FDS 2026.2 (cap. 5, *Engenharia de Software Moderna*).
 
 O aluno **agenda o lanche** para o horário do intervalo, a tia **prepara na ordem certa** e,
-com **um toque em "Pronto ✓"**, o aluno recebe o aviso e vai direto ao balcão, sem fila.
+com **um toque em "Pronto"**, o aluno recebe o aviso e vai direto ao balcão, sem fila.
 
 ## Por que esse app
 
@@ -73,7 +73,7 @@ src/
 
 ## Usabilidade (heurísticas de Nielsen)
 
-- **Status visível:** selos *Agendado → Pronto! → Retirado*; aviso 🔔 ao aluno; contadores nas abas da tia.
+- **Status visível:** selos *Agendado → Pronto! → Retirado*; aviso na tela do aluno; contadores nas abas da tia.
 - **Linguagem do usuário:** "Feito na hora", "Pronta-entrega", "Peguei!", "Entrega chegou".
 - **Controle e liberdade:** o aluno cancela (o estoque volta) e a tia desfaz um "Pronto" tocado por engano.
 - **Prevenção de erros:** o horário já vem no mais cedo possível; o "+" fica desabilitado quando acaba o estoque; um pedido inválido não altera nada.

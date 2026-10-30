@@ -1,3 +1,8 @@
+import '@fontsource/barlow-condensed/600.css';
+import '@fontsource/barlow-condensed/700.css';
+import '@fontsource/dm-sans/400.css';
+import '@fontsource/dm-sans/500.css';
+import '@fontsource/dm-sans/700.css';
 import './ui/estilos.css';
 import { AcompanharPedidos } from './aplicacao/AcompanharPedidos';
 import { AgendarCompra } from './aplicacao/AgendarCompra';

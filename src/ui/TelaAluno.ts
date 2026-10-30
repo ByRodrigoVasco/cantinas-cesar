@@ -7,7 +7,8 @@ import { ErroDeDominio } from '../dominio/ErroDeDominio';
 import { Horario } from '../dominio/Horario';
 import type { Pedido, StatusPedido } from '../dominio/pedido/Pedido';
 import type { Produto } from '../dominio/produto/Produto';
-import { agruparPorCategoria, escapar, formatarPreco, htmlMensagem, iconeDaCategoria } from './formatacao';
+import { agruparPorCategoria, escapar, formatarPreco, htmlMensagem } from './formatacao';
+import { icone, iconeDaCategoria } from './icones';
 import type { Mensagem, Tela } from './Tela';
 
 export interface DependenciasDoAluno {
@@ -60,7 +61,7 @@ export class TelaAluno implements Tela {
     if (acao === 'repetir') this.pedirDeNovo(numero);
     if (acao === 'retirei') {
       this.deps.pedidos.confirmarRetirada(numero);
-      this.mensagem = { tipo: 'sucesso', texto: 'Bom lanche! 😋' };
+      this.mensagem = { tipo: 'sucesso', texto: 'Retirada confirmada. Bom lanche!' };
     }
     if (acao === 'cancelar') {
       this.deps.cancelarPedido.executar(numero);
@@ -152,7 +153,7 @@ export class TelaAluno implements Tela {
         const aviso = this.avisos.findLast((a) => a.numeroDoPedido === pedido.numero);
         return `
           <div class="aviso-pronto" role="status">
-            <span class="aviso-sino" aria-hidden="true">🔔</span>
+            ${icone('sino')}
             <p>${escapar(aviso?.mensagem ?? `Pedido #${pedido.numero} pronto!`)}</p>
             <button class="botao botao-primario" data-acao="retirei" data-numero="${pedido.numero}">Peguei!</button>
           </div>`;
