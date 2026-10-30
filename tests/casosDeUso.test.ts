@@ -1,149 +1,140 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { AcompanharPedidos } from '../src/aplicacao/AcompanharPedidos';
-import { AgendarCompra } from '../src/aplicacao/AgendarCompra';
-import { CadastrarProduto } from '../src/aplicacao/CadastrarProduto';
-import { CancelarPedido } from '../src/aplicacao/CancelarPedido';
-import type { Aviso, Notificador, Relogio } from '../src/aplicacao/portas';
-import { ReporEstoque } from '../src/aplicacao/ReporEstoque';
 import { ErroDeDominio } from '../src/dominio/ErroDeDominio';
-import { Horario } from '../src/dominio/Horario';
-import type { Produto } from '../src/dominio/produto/Produto';
-import { Usuario } from '../src/dominio/usuario/Usuario';
-import { RepositorioDePedidosEmMemoria, RepositorioDeProdutosEmMemoria } from '../src/infra/RepositoriosEmMemoria';
+import { montarCenario } from './cenario';
 
-/** Aluno de teste: o id é o nome em minúsculas, para os testes ficarem legíveis. */
-const aluno = (nome: string) => new Usuario(nome.toLowerCase(), nome, `${nome.toLowerCase()}@cesar.school`, 'aluno', 'senha123');
+let c: ReturnType<typeof montarCenario>;
+beforeEach(() => {
+  c = montarCenario();
+});
 
-/* Dublês: só funcionam porque os casos de uso dependem de portas, não de classes concretas. */
-class RelogioParado implements Relogio {
-  constructor(private readonly horario: string) {}
-  agora(): Horario {
-    return Horario.de(this.horario);
-  }
-}
-
-class NotificadorEspiao implements Notificador {
-  readonly avisos: Aviso[] = [];
-  notificar(aviso: Aviso): void {
-    this.avisos.push(aviso);
-  }
-}
-
-describe('Fluxo da cantina', () => {
-  let produtos: RepositorioDeProdutosEmMemoria;
-  let notificador: NotificadorEspiao;
-  let agendar: AgendarCompra;
-  let acompanhar: AcompanharPedidos;
-  let repor: ReporEstoque;
-  let tapioca: Produto;
-  let refri: Produto;
-
-  beforeEach(() => {
-    produtos = new RepositorioDeProdutosEmMemoria();
-    const pedidos = new RepositorioDePedidosEmMemoria();
-    notificador = new NotificadorEspiao();
-    agendar = new AgendarCompra(produtos, pedidos, new RelogioParado('20:00'));
-    acompanhar = new AcompanharPedidos(pedidos, notificador);
-    repor = new ReporEstoque(produtos);
-    const cadastrar = new CadastrarProduto(produtos);
-    tapioca = cadastrar.executar({ nome: 'Tapioca', categoria: 'Tapiocas', precoEmCentavos: 1000, tipo: 'perecivel', tempoDePreparoMin: 6 });
-    refri = cadastrar.executar({ nome: 'Refri', categoria: 'Bebidas', precoEmCentavos: 800, tipo: 'nao-perecivel', estoqueIdeal: 4 });
-  });
-
-  const pedir = (cliente: string, horario: string, itens: [Produto, number][]) =>
-    agendar.executar({
-      cliente: aluno(cliente),
-      horarioDeRetirada: horario,
-      itens: itens.map(([produto, quantidade]) => ({ produtoId: produto.id, quantidade })),
-    });
-
+describe('Estudante agenda', () => {
   it('agendar baixa o estoque sozinho', () => {
-    pedir('Ana', '20:30', [[tapioca, 1], [refri, 3]]);
-    expect(refri.quantidadeEmEstoque).toBe(1);
+    c.pedir(c.ana, '20:30', [[c.tapioca, 1], [c.refri, 3]]);
+    expect(c.produtos.buscarPorId(c.refri.id)?.quantidadeEmEstoque).toBe(1);
   });
 
-  it('recusa horário sem tempo de preparo', () => {
-    expect(() => pedir('Ana', '20:10', [[tapioca, 2]])).toThrow('a partir das 20:12');
+  it('recusa horário sem tempo de preparo e sugere o mais cedo possível', () => {
+    expect(() => c.pedir(c.ana, '20:10', [[c.tapioca, 2]])).toThrow('a partir das 20:12');
+    expect(c.casos.agendar.horarioMaisCedo([{ produtoId: c.tapioca.id, quantidade: 2 }]).toString()).toBe('20:12');
   });
 
   it('pedido com item esgotado não mexe em nada', () => {
-    expect(() => pedir('Ana', '20:30', [[tapioca, 1], [refri, 5]])).toThrow(ErroDeDominio);
-    expect(refri.quantidadeEmEstoque).toBe(4);
-    expect(acompanhar.filaDaCantina()).toHaveLength(0);
+    expect(() => c.pedir(c.ana, '20:30', [[c.tapioca, 1], [c.refri, 5]])).toThrow(ErroDeDominio);
+    expect(c.produtos.buscarPorId(c.refri.id)?.quantidadeEmEstoque).toBe(4);
+    expect(c.casos.painel.fila(c.imperial.conta)).toHaveLength(0);
   });
 
-  it('fila da tia vem na ordem de começar o preparo', () => {
-    pedir('Ana', '20:40', [[refri, 1]]);
-    pedir('Beto', '20:35', [[tapioca, 3]]);
-    expect(acompanhar.filaDaCantina().map((p) => p.cliente)).toEqual(['Beto', 'Ana']);
+  it('cada pedido é de uma cantina só', () => {
+    expect(() => c.pedir(c.ana, '20:30', [[c.tapioca, 1], [c.cafezinho, 1]])).toThrow('uma cantina só');
   });
 
-  it('resume o que preparar em lote', () => {
-    pedir('Ana', '20:30', [[tapioca, 1]]);
-    pedir('Beto', '20:40', [[tapioca, 2]]);
-    expect(acompanhar.resumoDoQueFazer()).toEqual([{ nome: 'Tapioca', quantidade: 3 }]);
-  });
-
-  it('marcar pronto avisa o aluno sem a tia fazer mais nada', () => {
-    const pedido = pedir('Ana', '20:30', [[tapioca, 1]]);
-    acompanhar.marcarPronto(pedido.numero);
-    expect(notificador.avisos).toEqual([expect.objectContaining({ clienteId: 'ana', numeroDoPedido: pedido.numero })]);
-    expect(acompanhar.resumoDoQueFazer()).toEqual([]);
-  });
-
-  it('aluno confirma a retirada e o pedido sai da fila', () => {
-    const pedido = pedir('Ana', '20:30', [[tapioca, 1]]);
-    acompanhar.marcarPronto(pedido.numero);
-    acompanhar.confirmarRetirada(pedido.numero);
-    expect(acompanhar.filaDaCantina()).toHaveLength(0);
-    expect(acompanhar.pedidosDoCliente('ana')).toHaveLength(1);
-  });
-
-  it('lista de compras sai pronta e a entrega repõe tudo', () => {
-    pedir('Ana', '20:30', [[refri, 3]]);
-    expect(repor.listaDeCompras()).toEqual([{ produto: refri, quantidade: 3 }]);
-    expect(repor.mensagemParaFornecedor()).toContain('3x Refri');
-    repor.registrarEntrega([{ produtoId: refri.id, quantidade: 3 }]);
-    expect(refri.quantidadeEmEstoque).toBe(4);
-    expect(repor.listaDeCompras()).toEqual([]);
+  it('só estudante agenda', () => {
+    expect(() => c.pedir(c.imperial.conta, '20:30', [[c.tapioca, 1]])).toThrow('não tem acesso');
   });
 });
 
-describe('Saídas de emergência (controle e liberdade)', () => {
-  const produtos = new RepositorioDeProdutosEmMemoria();
-  const pedidos = new RepositorioDePedidosEmMemoria();
-  const notificador: Notificador = { notificar: () => {} };
-  const agendar = new AgendarCompra(produtos, pedidos, new RelogioParado('20:00'));
-  const acompanhar = new AcompanharPedidos(pedidos, notificador);
-  const cancelar = new CancelarPedido(pedidos, produtos);
-  const cadastrar = new CadastrarProduto(produtos);
-  const tapioca = cadastrar.executar({ nome: 'Tapioca', categoria: 'Tapiocas', precoEmCentavos: 1000, tipo: 'perecivel', tempoDePreparoMin: 6 });
-  const agua = cadastrar.executar({ nome: 'Água', categoria: 'Bebidas', precoEmCentavos: 500, tipo: 'nao-perecivel', estoqueIdeal: 5 });
+describe('Painel da cantina', () => {
+  it('fila na ordem de começar o preparo e resumo em lote', () => {
+    c.pedir(c.ana, '20:40', [[c.refri, 1]]);
+    c.pedir(c.beto, '20:35', [[c.tapioca, 3]]);
+    c.pedir(c.ana, '20:50', [[c.tapioca, 1]]);
+    expect(c.casos.painel.fila(c.imperial.conta).map((p) => p.cliente)).toEqual(['Beto', 'Ana', 'Ana']);
+    expect(c.casos.painel.resumoDoQueFazer(c.imperial.conta)).toEqual([{ nome: 'Tapioca', quantidade: 4 }]);
+  });
 
+  it('marcar pronto avisa o estudante sem a cantina fazer mais nada', () => {
+    const pedido = c.pedir(c.ana, '20:30', [[c.tapioca, 1]]);
+    c.casos.painel.marcarPronto(c.imperial.conta, pedido.numero);
+    expect(c.notificador.avisos).toEqual([expect.objectContaining({ clienteId: 'ana', numeroDoPedido: pedido.numero })]);
+  });
+
+  it('desfaz um "pronto" tocado por engano', () => {
+    const pedido = c.pedir(c.ana, '20:30', [[c.tapioca, 1]]);
+    c.casos.painel.marcarPronto(c.imperial.conta, pedido.numero);
+    c.casos.painel.desfazerPronto(c.imperial.conta, pedido.numero);
+    expect(c.casos.painel.resumoDoQueFazer(c.imperial.conta)).toEqual([{ nome: 'Tapioca', quantidade: 1 }]);
+  });
+
+  it('uma cantina não vê nem mexe nos pedidos e produtos da outra', () => {
+    const pedido = c.pedir(c.ana, '20:30', [[c.tapioca, 1]]);
+    expect(c.casos.painel.fila(c.cafe.conta)).toHaveLength(0);
+    expect(() => c.casos.painel.marcarPronto(c.cafe.conta, pedido.numero)).toThrow('não encontrado');
+    expect(() => c.casos.cardapio.alternarNoCardapio(c.cafe.conta, c.tapioca.id)).toThrow('não encontrado');
+  });
+
+  it('estudante não usa o painel da cantina', () => {
+    expect(() => c.casos.painel.fila(c.ana)).toThrow('não tem acesso');
+  });
+});
+
+describe('Pedidos do estudante', () => {
   it('cancelar devolve o estoque e tira da fila', () => {
-    const pedido = agendar.executar({ cliente: aluno('Ana'), horarioDeRetirada: '20:30', itens: [{ produtoId: agua.id, quantidade: 2 }] });
-    expect(agua.quantidadeEmEstoque).toBe(3);
-    cancelar.executar(pedido.numero);
-    expect(agua.quantidadeEmEstoque).toBe(5);
-    expect(acompanhar.filaDaCantina()).toHaveLength(0);
+    const pedido = c.pedir(c.ana, '20:30', [[c.refri, 2]]);
+    c.casos.meusPedidos.cancelar(c.ana, pedido.numero);
+    expect(c.produtos.buscarPorId(c.refri.id)?.quantidadeEmEstoque).toBe(4);
+    expect(c.casos.painel.fila(c.imperial.conta)).toHaveLength(0);
   });
 
-  it('não cancela o que a tia já preparou', () => {
-    const pedido = agendar.executar({ cliente: aluno('Ana'), horarioDeRetirada: '20:30', itens: [{ produtoId: tapioca.id, quantidade: 1 }] });
-    acompanhar.marcarPronto(pedido.numero);
-    expect(() => cancelar.executar(pedido.numero)).toThrow('Fale com a tia');
+  it('não cancela o que a cantina já preparou, nem pedido de outro estudante', () => {
+    const pedido = c.pedir(c.ana, '20:30', [[c.tapioca, 1]]);
+    expect(() => c.casos.meusPedidos.cancelar(c.beto, pedido.numero)).toThrow('não encontrado');
+    c.casos.painel.marcarPronto(c.imperial.conta, pedido.numero);
+    expect(() => c.casos.meusPedidos.cancelar(c.ana, pedido.numero)).toThrow('Fale com a cantina');
   });
 
-  it('a tia desfaz um "pronto" tocado por engano', () => {
-    const pedido = agendar.executar({ cliente: aluno('Beto'), horarioDeRetirada: '20:40', itens: [{ produtoId: tapioca.id, quantidade: 1 }] });
-    acompanhar.marcarPronto(pedido.numero);
-    acompanhar.desfazerPronto(pedido.numero);
-    expect(pedido.status).toBe('agendado');
-    expect(acompanhar.resumoDoQueFazer()).toContainEqual({ nome: 'Tapioca', quantidade: 1 });
+  it('retirada entra no histórico como venda do app, com o valor', () => {
+    const pedido = c.pedir(c.ana, '20:30', [[c.tapioca, 2], [c.refri, 1]]);
+    c.casos.painel.marcarPronto(c.imperial.conta, pedido.numero);
+    c.casos.meusPedidos.confirmarRetirada(c.ana, pedido.numero);
+    const resumo = c.casos.resumo.doPeriodo(c.imperial.conta, 'dia');
+    expect(resumo.faturamentoEmCentavos).toBe(2800);
+    expect(resumo.pedidosDoApp).toBe(1);
+  });
+});
+
+describe('Avaliação por item', () => {
+  const retirarPedido = () => {
+    const pedido = c.pedir(c.ana, '20:30', [[c.tapioca, 1], [c.refri, 1]]);
+    c.casos.painel.marcarPronto(c.imperial.conta, pedido.numero);
+    c.casos.meusPedidos.confirmarRetirada(c.ana, pedido.numero);
+    return pedido;
+  };
+
+  it('cada item recebe a sua nota e a média aparece no cardápio', () => {
+    const pedido = retirarPedido();
+    c.casos.meusPedidos.avaliarItem(c.ana, pedido.numero, c.tapioca.id, 5);
+    c.casos.meusPedidos.avaliarItem(c.ana, pedido.numero, c.refri.id, 3);
+    const notas = c.casos.consultar.avaliacoesDoCardapio(c.imperial.cantina.id);
+    expect(notas.get(c.tapioca.id)).toEqual({ media: 5, quantidade: 1 });
+    expect(notas.get(c.refri.id)).toEqual({ media: 3, quantidade: 1 });
   });
 
-  it('sugere o horário mais cedo possível antes de o aluno errar', () => {
-    expect(agendar.horarioMaisCedo([{ produtoId: tapioca.id, quantidade: 2 }]).toString()).toBe('20:12');
-    expect(agendar.horarioMaisCedo([{ produtoId: agua.id, quantidade: 1 }]).toString()).toBe('20:00');
+  it('só avalia depois de retirar, e só o próprio pedido', () => {
+    const pedido = c.pedir(c.ana, '20:30', [[c.tapioca, 1]]);
+    expect(() => c.casos.meusPedidos.avaliarItem(c.ana, pedido.numero, c.tapioca.id, 5)).toThrow('depois de retirar');
+    const retirado = retirarPedido();
+    expect(() => c.casos.meusPedidos.avaliarItem(c.beto, retirado.numero, c.tapioca.id, 5)).toThrow('não encontrado');
+  });
+
+  it('o CESAR vê a nota média de cada cantina', () => {
+    const pedido = retirarPedido();
+    c.casos.meusPedidos.avaliarItem(c.ana, pedido.numero, c.tapioca.id, 4);
+    c.casos.meusPedidos.avaliarItem(c.ana, pedido.numero, c.refri.id, 5);
+    const imperial = c.casos.visaoGeral.executar(c.gestao).find((s) => s.cantina.id === c.imperial.cantina.id);
+    expect(imperial?.avaliacao).toEqual({ media: 4.5, quantidade: 2 });
+    expect(imperial?.pedidosEntregues).toBe(1);
+  });
+});
+
+describe('Configurações da cantina', () => {
+  it('cada cantina escolhe as cores do próprio cardápio', () => {
+    c.casos.configurar.mudarCores(c.imperial.conta, { principal: '#F7AE3E', secundaria1: '#4b0a33', secundaria2: '#d23a2f' });
+    expect(c.casos.consultar.buscar(c.imperial.cantina.id).cores.principal).toBe('#f7ae3e');
+    expect(c.casos.consultar.buscar(c.cafe.cantina.id).cores.principal).toBe('#ff6002');
+  });
+
+  it('recusa cor fora do formato', () => {
+    expect(() => c.casos.configurar.mudarCores(c.imperial.conta, { principal: 'laranja', secundaria1: '#000000', secundaria2: '#ffffff' }))
+      .toThrow('#RRGGBB');
   });
 });

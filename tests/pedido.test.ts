@@ -25,7 +25,7 @@ describe('Horario', () => {
 
 describe('Pedido', () => {
   const pedido = () =>
-    new Pedido(1, 'ana', 'Ana', [item('Tapioca', 2, 6, 1000), item('Água', 1, 0, 500)], Horario.de('20:30'));
+    new Pedido(1, 'c1', 'ana', 'Ana', [item('Tapioca', 2, 6, 1000), item('Água', 1, 0, 500)], Horario.de('20:30'));
 
   it('soma total e tempo de preparo', () => {
     expect(pedido().totalEmCentavos()).toBe(2500);
@@ -53,7 +53,31 @@ describe('Pedido', () => {
   });
 
   it('exige cliente e pelo menos um item', () => {
-    expect(() => new Pedido(1, 'ana', ' ', [item('X', 1, 1)], Horario.de('20:00'))).toThrow(ErroDeDominio);
-    expect(() => new Pedido(1, 'ana', 'Ana', [], Horario.de('20:00'))).toThrow(ErroDeDominio);
+    expect(() => new Pedido(1, 'c1', 'ana', ' ', [item('X', 1, 1)], Horario.de('20:00'))).toThrow(ErroDeDominio);
+    expect(() => new Pedido(1, 'c1', 'ana', 'Ana', [], Horario.de('20:00'))).toThrow(ErroDeDominio);
+  });
+});
+
+describe('Avaliação do pedido', () => {
+  const retirado = () => {
+    const p = new Pedido(1, 'c1', 'ana', 'Ana', [item('Tapioca', 1, 6), item('Água', 1, 0)], Horario.de('20:30'));
+    p.marcarPronto();
+    p.confirmarRetirada();
+    return p;
+  };
+
+  it('nota de 1 a 5 por item; dá para mudar de ideia', () => {
+    const p = retirado();
+    p.avaliarItem('Tapioca', 4);
+    p.avaliarItem('Tapioca', 5);
+    expect(p.notaDoItem('Tapioca')).toBe(5);
+    expect(p.notaDoItem('Água')).toBeUndefined();
+  });
+
+  it('recusa nota fora da escala e item que não está no pedido', () => {
+    const p = retirado();
+    expect(() => p.avaliarItem('Tapioca', 0)).toThrow(ErroDeDominio);
+    expect(() => p.avaliarItem('Tapioca', 4.5)).toThrow(ErroDeDominio);
+    expect(() => p.avaliarItem('Coxinha', 5)).toThrow('não está no pedido');
   });
 });

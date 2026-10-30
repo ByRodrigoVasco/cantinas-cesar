@@ -1,11 +1,17 @@
-import type { Autenticacao } from '../aplicacao/Autenticacao';
+import type { Autenticacao } from '../aplicacao/acesso/Autenticacao';
 import { ErroDeDominio } from '../dominio/ErroDeDominio';
-import type { Usuario } from '../dominio/usuario/Usuario';
+import type { Perfil, Usuario } from '../dominio/usuario/Usuario';
 import { escapar } from './formatacao';
 import { icone } from './icones';
 import type { Tela } from './Tela';
 
 const INTERVALO_DE_ATUALIZACAO_MS = 30_000;
+
+const ROTULO_DO_PERFIL: Record<Perfil, string> = {
+  cesar: 'Gestão CESAR',
+  cantina: 'Cantina',
+  estudante: 'Estudante',
+};
 
 export interface DependenciasDoApp {
   readonly autenticacao: Autenticacao;
@@ -37,10 +43,10 @@ export class App {
   private montar(): void {
     this.raiz.innerHTML = `
       <header class="topo">
-        <div class="marca">
-          <h1><span>Cantina</span> CESAR</h1>
-          <p>com <strong>Imperial</strong> Padaria</p>
-        </div>
+        <h1 class="marca">
+          <img class="marca-cesar" src="${import.meta.env.BASE_URL}marcas/cesar.svg" alt="CESAR School" />
+          <span class="marca-produto">Cantinas</span>
+        </h1>
         <div class="topo-direita" data-area="usuario"></div>
       </header>
       <main class="conteudo" data-area="tela"></main>`;
@@ -64,8 +70,27 @@ export class App {
     });
     this.raiz.addEventListener('input', (evento) => {
       const campo = evento.target as HTMLInputElement;
-      if (campo.dataset.campo) this.tela.aoDigitar(campo.dataset.campo, campo.value);
+      if (campo.dataset.campo && campo.type !== 'file') this.tela.aoDigitar(campo.dataset.campo, campo.value);
     });
+    this.raiz.addEventListener('change', (evento) => {
+      const campo = evento.target as HTMLInputElement;
+      const arquivo = campo.type === 'file' ? campo.files?.[0] : undefined;
+      if (arquivo && campo.dataset.campo && this.tela.aoEscolherArquivo) {
+        void this.executarAssincrono(this.tela.aoEscolherArquivo(campo.dataset.campo, arquivo));
+      }
+    });
+  }
+
+  private async executarAssincrono(acao: Promise<void>): Promise<void> {
+    const tela = this.tela;
+    tela.mostrarMensagem(null);
+    try {
+      await acao;
+    } catch (erro) {
+      if (!(erro instanceof ErroDeDominio)) throw erro;
+      tela.mostrarMensagem({ tipo: 'erro', texto: erro.message });
+    }
+    if (tela === this.tela) this.atualizar();
   }
 
   private executar(acao: () => void): void {
@@ -87,9 +112,9 @@ export class App {
       this.idDoUsuarioDaTela = usuario?.id;
     }
     this.area('usuario').innerHTML = usuario
-      ? `<span class="saudacao">${icone(usuario.perfil)}Olá, <strong>${escapar(usuario.primeiroNome)}</strong></span>
+      ? `<span class="saudacao">${icone(usuario.perfil)}<span><small>${ROTULO_DO_PERFIL[usuario.perfil]}</small>${escapar(usuario.primeiroNome)}</span></span>
          <button class="botao botao-sair" data-acao="sair">${icone('sair')}Sair</button>`
-      : `<p class="slogan">15 minutos de intervalo.<br />Zero minutos de fila.</p>`;
+      : '';
 
     const rolagem = trocouDeUsuario ? 0 : window.scrollY;
     this.area('tela').innerHTML = `<div class="tela tela-${this.tela.nome}">${this.tela.html()}</div>`;

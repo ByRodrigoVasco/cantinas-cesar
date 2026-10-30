@@ -1,8 +1,8 @@
-import { ErroDeDominio } from '../dominio/ErroDeDominio';
-import type { Usuario } from '../dominio/usuario/Usuario';
-import type { RepositorioDeUsuarios, Sessao } from './portas';
+import { ErroDeDominio } from '../../dominio/ErroDeDominio';
+import type { Usuario } from '../../dominio/usuario/Usuario';
+import type { RepositorioDeUsuarios, Sessao } from '../portas';
 
-/** Entrar, sair e saber quem está usando o app. */
+/** Entrar, sair e saber quem está usando o app. Vale para os três acessos. */
 export class Autenticacao {
   constructor(
     private readonly usuarios: RepositorioDeUsuarios,

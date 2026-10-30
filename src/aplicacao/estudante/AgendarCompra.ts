@@ -1,9 +1,10 @@
-import { ErroDeDominio } from '../dominio/ErroDeDominio';
-import { Horario } from '../dominio/Horario';
-import { Pedido, type ItemPedido } from '../dominio/pedido/Pedido';
-import type { Produto } from '../dominio/produto/Produto';
-import type { Usuario } from '../dominio/usuario/Usuario';
-import type { RepositorioDePedidos, RepositorioDeProdutos, Relogio } from './portas';
+import { ErroDeDominio } from '../../dominio/ErroDeDominio';
+import { Horario } from '../../dominio/Horario';
+import { Pedido, type ItemPedido } from '../../dominio/pedido/Pedido';
+import type { Produto } from '../../dominio/produto/Produto';
+import type { Usuario } from '../../dominio/usuario/Usuario';
+import { exigirPerfil } from '../autorizacao';
+import type { RepositorioDePedidos, RepositorioDeProdutos, Relogio } from '../portas';
 
 export interface ItemSolicitado {
   produtoId: string;
@@ -12,11 +13,12 @@ export interface ItemSolicitado {
 
 export interface SolicitacaoDeCompra {
   cliente: Usuario;
+  cantinaId: string;
   horarioDeRetirada: string;
   itens: ItemSolicitado[];
 }
 
-/** Caso de uso do aluno: "Agendar compra" para um horário de retirada. */
+/** Acesso estudante: "Agendar compra" numa cantina, para um horário de retirada. */
 export class AgendarCompra {
   constructor(
     private readonly produtos: RepositorioDeProdutos,
@@ -25,12 +27,14 @@ export class AgendarCompra {
   ) {}
 
   executar(solicitacao: SolicitacaoDeCompra): Pedido {
+    exigirPerfil(solicitacao.cliente, 'estudante');
     const escolhidos = solicitacao.itens.map(({ produtoId, quantidade }) => ({
-      produto: this.produtoDisponivel(produtoId, quantidade),
+      produto: this.produtoDisponivel(solicitacao.cantinaId, produtoId, quantidade),
       quantidade,
     }));
     const pedido = new Pedido(
       this.pedidos.proximoNumero(),
+      solicitacao.cantinaId,
       solicitacao.cliente.id,
       solicitacao.cliente.primeiroNome,
       escolhidos.map(({ produto, quantidade }) => this.itemDoPedido(produto, quantidade)),
@@ -56,9 +60,10 @@ export class AgendarCompra {
     return this.relogio.agora().mais(minutos);
   }
 
-  private produtoDisponivel(produtoId: string, quantidade: number): Produto {
+  private produtoDisponivel(cantinaId: string, produtoId: string, quantidade: number): Produto {
     const produto = this.produtos.buscarPorId(produtoId);
     if (!produto) throw new ErroDeDominio('Produto não encontrado.');
+    if (produto.cantinaId !== cantinaId) throw new ErroDeDominio('Cada pedido é de uma cantina só.');
     if (!produto.estaDisponivel(quantidade)) {
       throw new ErroDeDominio(`${produto.nome} não está disponível nessa quantidade.`);
     }

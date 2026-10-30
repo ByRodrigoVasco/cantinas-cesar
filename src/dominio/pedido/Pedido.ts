@@ -14,26 +14,34 @@ export interface ItemPedido {
 
 export interface PedidoSalvo {
   readonly numero: number;
+  readonly cantinaId: string;
   readonly clienteId: string;
   readonly cliente: string;
   readonly itens: readonly ItemPedido[];
   readonly horarioDeRetirada: string;
   readonly status: StatusPedido;
+  readonly notas: Readonly<Record<string, number>>;
 }
 
+const NOTA_MINIMA = 1;
+const NOTA_MAXIMA = 5;
+
 /**
- * Pedido agendado por um aluno. O status é privado: só muda pelos métodos abaixo,
- * que garantem a ordem agendado → pronto → retirado (Ocultamento de informação).
- * Saídas de emergência: o aluno cancela enquanto está agendado; a tia desfaz um "pronto".
+ * Pedido agendado por um estudante numa cantina. O status é privado: só muda pelos métodos
+ * abaixo, que garantem a ordem agendado → pronto → retirado (Ocultamento de informação).
+ * Saídas de emergência: o estudante cancela enquanto está agendado; a cantina desfaz um "pronto".
+ * Depois de retirado, o estudante avalia cada item separadamente.
  */
 export class Pedido {
   private _status: StatusPedido = 'agendado';
+  private readonly notas = new Map<string, number>();
   readonly itens: readonly ItemPedido[];
 
   constructor(
     readonly numero: number,
+    readonly cantinaId: string,
     readonly clienteId: string,
-    /** Nome que a tia chama no balcão. */
+    /** Nome que a cantina chama no balcão. */
     readonly cliente: string,
     itens: readonly ItemPedido[],
     readonly horarioDeRetirada: Horario,
@@ -61,7 +69,7 @@ export class Pedido {
     return this.itens.reduce((soma, item) => soma + item.tempoDePreparoMin * item.quantidade, 0);
   }
 
-  /** Hora em que a tia deve começar, para ficar pronto exatamente na retirada. */
+  /** Hora em que a cantina deve começar, para ficar pronto exatamente na retirada. */
   horarioParaComecar(): Horario {
     return this.horarioDeRetirada.menos(this.tempoDePreparoMin());
   }
@@ -83,25 +91,49 @@ export class Pedido {
 
   cancelar(): void {
     if (this._status !== 'agendado') {
-      throw new ErroDeDominio(`Pedido #${this.numero} já foi preparado e não pode ser cancelado. Fale com a tia.`);
+      throw new ErroDeDominio(`Pedido #${this.numero} já foi preparado e não pode ser cancelado. Fale com a cantina.`);
     }
     this._status = 'cancelado';
+  }
+
+  /** Cada item recebe a própria nota (1 a 5). Dá para mudar de ideia: a última nota vale. */
+  avaliarItem(produtoId: string, nota: number): void {
+    if (this._status !== 'retirado') throw new ErroDeDominio('Você pode avaliar depois de retirar o pedido.');
+    if (!this.itens.some((item) => item.produtoId === produtoId)) throw new ErroDeDominio('Esse item não está no pedido.');
+    if (!Number.isInteger(nota) || nota < NOTA_MINIMA || nota > NOTA_MAXIMA) {
+      throw new ErroDeDominio(`A nota vai de ${NOTA_MINIMA} a ${NOTA_MAXIMA}.`);
+    }
+    this.notas.set(produtoId, nota);
+  }
+
+  notaDoItem(produtoId: string): number | undefined {
+    return this.notas.get(produtoId);
+  }
+
+  /** Notas dadas até agora, por produto (para calcular a média do cardápio). */
+  notasDadas(): ReadonlyMap<string, number> {
+    return new Map(this.notas);
   }
 
   paraDados(): PedidoSalvo {
     return {
       numero: this.numero,
+      cantinaId: this.cantinaId,
       clienteId: this.clienteId,
       cliente: this.cliente,
       itens: this.itens,
       horarioDeRetirada: this.horarioDeRetirada.toString(),
       status: this._status,
+      notas: Object.fromEntries(this.notas),
     };
   }
 
   static deDados(dados: PedidoSalvo): Pedido {
-    const pedido = new Pedido(dados.numero, dados.clienteId, dados.cliente, dados.itens, Horario.de(dados.horarioDeRetirada));
+    const pedido = new Pedido(
+      dados.numero, dados.cantinaId, dados.clienteId, dados.cliente, dados.itens, Horario.de(dados.horarioDeRetirada),
+    );
     pedido._status = dados.status;
+    for (const [produtoId, nota] of Object.entries(dados.notas ?? {})) pedido.notas.set(produtoId, nota);
     return pedido;
   }
 }

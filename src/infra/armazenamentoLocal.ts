@@ -1,17 +1,22 @@
 import type {
-  Aviso, LeitorDeAvisos, Notificador, RepositorioDePedidos, RepositorioDeProdutos, RepositorioDeUsuarios, Sessao,
+  Aviso, LeitorDeAvisos, Notificador, RepositorioDeCantinas, RepositorioDeMovimentacoes, RepositorioDePedidos,
+  RepositorioDeProdutos,
+  RepositorioDeUsuarios, Sessao,
 } from '../aplicacao/portas';
+import { Cantina, type CantinaSalva } from '../dominio/cantina/Cantina';
+import type { Movimentacao } from '../dominio/estoque/Movimentacao';
 import { Pedido, type PedidoSalvo } from '../dominio/pedido/Pedido';
 import { Produto, type ProdutoSalvo } from '../dominio/produto/Produto';
 import { Usuario, type UsuarioSalvo } from '../dominio/usuario/Usuario';
 
 /*
  * Implementações das portas usando o armazenamento do navegador. Os dados sobrevivem ao
- * recarregar a página e são compartilhados entre abas: aluno numa aba e cantina em outra.
+ * recarregar a página e são compartilhados entre abas: estudante numa aba e cantina em outra.
  * Os casos de uso não sabem disso; main.ts é quem escolhe esta implementação.
  */
 
-const PREFIXO = 'cantina-cesar:';
+/** v2: a versão com várias cantinas; dados da v1 (uma cantina só) são ignorados. */
+const PREFIXO = 'cantina-cesar:v2:';
 
 /** Uma "tabela" guardada como JSON { chave: registro } numa entrada do Storage. */
 class ColecaoLocal<T> {
@@ -40,6 +45,23 @@ class ColecaoLocal<T> {
     } catch {
       return {};
     }
+  }
+}
+
+export class RepositorioDeCantinasLocal implements RepositorioDeCantinas {
+  private readonly colecao = new ColecaoLocal<CantinaSalva>('cantinas');
+
+  salvar(cantina: Cantina): void {
+    this.colecao.salvar(cantina.id, cantina.paraDados());
+  }
+
+  buscarPorId(id: string): Cantina | undefined {
+    const salva = this.colecao.buscar(id);
+    return salva && Cantina.deDados(salva);
+  }
+
+  listar(): Cantina[] {
+    return this.colecao.listar().map(Cantina.deDados);
   }
 }
 
@@ -81,6 +103,18 @@ export class RepositorioDePedidosLocal implements RepositorioDePedidos {
   }
 }
 
+export class RepositorioDeMovimentacoesLocal implements RepositorioDeMovimentacoes {
+  private readonly colecao = new ColecaoLocal<Movimentacao>('movimentacoes');
+
+  registrar(movimentacao: Movimentacao): void {
+    this.colecao.salvar(movimentacao.id, movimentacao);
+  }
+
+  listar(cantinaId: string): Movimentacao[] {
+    return this.colecao.listar().filter((m) => m.cantinaId === cantinaId);
+  }
+}
+
 export class RepositorioDeUsuariosLocal implements RepositorioDeUsuarios {
   private readonly colecao = new ColecaoLocal<UsuarioSalvo>('usuarios');
 
@@ -100,7 +134,7 @@ export class RepositorioDeUsuariosLocal implements RepositorioDeUsuarios {
 }
 
 /**
- * Um aviso por pedido, guardado onde a aba do aluno consegue ler. Implementa as duas
+ * Um aviso por pedido, guardado onde a aba do estudante consegue ler. Implementa as duas
  * interfaces separadas (Notificador e LeitorDeAvisos) porque aqui o mesmo lugar escreve e lê.
  */
 export class CaixaDeAvisosLocal implements Notificador, LeitorDeAvisos {
@@ -115,7 +149,7 @@ export class CaixaDeAvisosLocal implements Notificador, LeitorDeAvisos {
   }
 }
 
-/** Sessão por aba (sessionStorage): dá para ter o aluno numa aba e a cantina em outra. */
+/** Sessão por aba (sessionStorage): dá para ter o estudante numa aba e a cantina em outra. */
 export class SessaoDaAba implements Sessao {
   private static readonly CHAVE = PREFIXO + 'sessao';
 
@@ -141,7 +175,7 @@ export function apagarDadosLocais(): void {
   }
 }
 
-/** Avisa quando outra aba mudou os dados (ex.: a tia marcou um pedido como pronto). */
+/** Avisa quando outra aba mudou os dados (ex.: a cantina marcou um pedido como pronto). */
 export function aoMudarEmOutraAba(ouvinte: () => void): void {
   window.addEventListener('storage', (evento) => {
     if (evento.key?.startsWith(PREFIXO)) ouvinte();

@@ -1,30 +1,62 @@
-import type { CadastrarProduto } from '../aplicacao/CadastrarProduto';
-import type { RepositorioDeProdutos, RepositorioDeUsuarios } from '../aplicacao/portas';
+import type { CadastrarProduto } from '../aplicacao/cantina/CadastrarProduto';
+import type { CadastrarCantina } from '../aplicacao/cesar/CadastrarCantina';
+import type {
+  RepositorioDeCantinas, RepositorioDeMovimentacoes, RepositorioDeProdutos, RepositorioDeUsuarios,
+} from '../aplicacao/portas';
 import { Usuario } from '../dominio/usuario/Usuario';
-import { carregarCardapioInicial } from './cardapioInicial';
+import { carregarCardapioDaImperial } from './cardapioInicial';
+import { gerarHistoricoDeExemplo } from './historicoDeExemplo';
+
+export interface RepositoriosDaDemonstracao {
+  readonly cantinas: RepositorioDeCantinas;
+  readonly usuarios: RepositorioDeUsuarios;
+  readonly produtos: RepositorioDeProdutos;
+  readonly movimentacoes: RepositorioDeMovimentacoes;
+}
 
 /*
- * Contas de teste da PoC. Ficam só aqui (e no README) para a apresentação.
+ * Contas de teste da PoC, uma para cada acesso. Ficam só aqui (e no README) para a apresentação.
  * Não são senhas reais: troque antes de qualquer uso fora da demonstração.
  */
 export const CONTAS_DE_DEMONSTRACAO = {
+  cesar: { email: 'gestao@cesar.school', senha: 'cesar2026' },
   cantina: { email: 'cantina@imperial.com.br', senha: 'imperial123' },
-  aluno: { email: 'aluno@cesar.school', senha: 'cesar123' },
+  estudante: { email: 'estudante@cesar.school', senha: 'cesar123' },
 } as const;
 
-/** Na primeira vez que o app abre (ou depois de "restaurar"), cria cardápio e contas. */
+export type AcessoDeDemonstracao = keyof typeof CONTAS_DE_DEMONSTRACAO;
+
+/**
+ * Na primeira vez que o app abre (ou depois de "restaurar"): cria a conta do CESAR, que abre a
+ * Imperial pelo mesmo caso de uso da tela; a Imperial cadastra o próprio cardápio; e um estudante.
+ */
 export function prepararDadosDeDemonstracao(
-  produtos: RepositorioDeProdutos,
-  usuarios: RepositorioDeUsuarios,
+  { cantinas, usuarios, produtos, movimentacoes }: RepositoriosDaDemonstracao,
+  cadastrarCantina: CadastrarCantina,
   cadastrarProduto: CadastrarProduto,
 ): void {
-  if (produtos.listar().length === 0) carregarCardapioInicial(cadastrarProduto);
+  const { cesar, cantina, estudante } = CONTAS_DE_DEMONSTRACAO;
+  if (!usuarios.buscarPorEmail(cesar.email)) {
+    usuarios.salvar(new Usuario('conta-cesar', 'Gestão CESAR', cesar.email, 'cesar', cesar.senha));
+  }
+  if (!usuarios.buscarPorEmail(estudante.email)) {
+    usuarios.salvar(new Usuario('conta-estudante-demo', 'Ana Souza', estudante.email, 'estudante', estudante.senha));
+  }
+  if (cantinas.listar().length > 0) return;
 
-  const { cantina, aluno } = CONTAS_DE_DEMONSTRACAO;
-  if (!usuarios.buscarPorEmail(cantina.email)) {
-    usuarios.salvar(new Usuario('conta-cantina', 'Tia da cantina', cantina.email, 'cantina', cantina.senha));
-  }
-  if (!usuarios.buscarPorEmail(aluno.email)) {
-    usuarios.salvar(new Usuario('conta-aluno-demo', 'Ana Souza', aluno.email, 'aluno', aluno.senha));
-  }
+  const gestao = usuarios.buscarPorEmail(cesar.email);
+  if (!gestao) return;
+  cadastrarCantina.executar(gestao, {
+    nome: 'Imperial Padaria',
+    local: 'Quiosque Brum',
+    logo: `${import.meta.env.BASE_URL}marcas/imperial.jpg`,
+    cores: { principal: '#f7ae3e', secundaria1: '#4b0a33', secundaria2: '#d23a2f' },
+    responsavel: 'Equipe Imperial',
+    email: cantina.email,
+    senha: cantina.senha,
+  });
+  const contaDaImperial = usuarios.buscarPorEmail(cantina.email);
+  if (!contaDaImperial) return;
+  carregarCardapioDaImperial(cadastrarProduto, contaDaImperial);
+  gerarHistoricoDeExemplo(movimentacoes, produtos.listar(), new Date());
 }

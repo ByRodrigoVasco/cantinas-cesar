@@ -10,7 +10,7 @@ export class ControleDeEstoque implements PoliticaDeDisponibilidade, Reabasteciv
   private quantidade: number;
 
   constructor(
-    private readonly estoqueIdeal: number,
+    readonly estoqueIdeal: number,
     quantidadeInicial: number = estoqueIdeal,
   ) {
     if (!(estoqueIdeal > 0)) throw new ErroDeDominio('Estoque ideal deve ser maior que zero.');

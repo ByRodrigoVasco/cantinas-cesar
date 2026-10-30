@@ -1,73 +1,102 @@
-import '@fontsource/barlow-condensed/600.css';
-import '@fontsource/barlow-condensed/700.css';
+import '@fontsource/barlow/400.css';
+import '@fontsource/barlow/700.css';
 import '@fontsource/dm-sans/400.css';
 import '@fontsource/dm-sans/500.css';
 import '@fontsource/dm-sans/700.css';
 import './ui/estilos.css';
-import { AcompanharPedidos } from './aplicacao/AcompanharPedidos';
-import { AgendarCompra } from './aplicacao/AgendarCompra';
-import { Autenticacao } from './aplicacao/Autenticacao';
-import { CadastrarAluno } from './aplicacao/CadastrarAluno';
-import { CadastrarProduto } from './aplicacao/CadastrarProduto';
-import { CancelarPedido } from './aplicacao/CancelarPedido';
-import { GerenciarCardapio } from './aplicacao/GerenciarCardapio';
-import { ReporEstoque } from './aplicacao/ReporEstoque';
+import './ui/estilos-painel.css';
+import { Autenticacao } from './aplicacao/acesso/Autenticacao';
+import { CadastrarEstudante } from './aplicacao/acesso/CadastrarEstudante';
+import { CadastrarProduto } from './aplicacao/cantina/CadastrarProduto';
+import { ConfigurarCantina } from './aplicacao/cantina/ConfigurarCantina';
+import { EstoqueDaCantina } from './aplicacao/cantina/EstoqueDaCantina';
+import { GerenciarCardapio } from './aplicacao/cantina/GerenciarCardapio';
+import { PainelDaCantina } from './aplicacao/cantina/PainelDaCantina';
+import { ReporEstoque } from './aplicacao/cantina/ReporEstoque';
+import { ResumoDaCantina } from './aplicacao/cantina/ResumoDaCantina';
+import { CadastrarCantina } from './aplicacao/cesar/CadastrarCantina';
+import { VisaoGeralDasCantinas } from './aplicacao/cesar/VisaoGeralDasCantinas';
+import { AgendarCompra } from './aplicacao/estudante/AgendarCompra';
+import { ConsultarCantinas } from './aplicacao/estudante/ConsultarCantinas';
+import { PedidosDoEstudante } from './aplicacao/estudante/PedidosDoEstudante';
 import type { Usuario } from './dominio/usuario/Usuario';
 import {
-  aoMudarEmOutraAba, apagarDadosLocais, CaixaDeAvisosLocal, RepositorioDePedidosLocal, RepositorioDeProdutosLocal,
-  RepositorioDeUsuariosLocal, SessaoDaAba,
+  aoMudarEmOutraAba, apagarDadosLocais, CaixaDeAvisosLocal, RepositorioDeCantinasLocal, RepositorioDeMovimentacoesLocal,
+  RepositorioDePedidosLocal, RepositorioDeProdutosLocal, RepositorioDeUsuariosLocal, SessaoDaAba,
 } from './infra/armazenamentoLocal';
 import { CONTAS_DE_DEMONSTRACAO, prepararDadosDeDemonstracao } from './infra/dadosDeDemonstracao';
 import { NotificadorComposto } from './infra/notificadores';
 import { RelogioDoSistema } from './infra/RelogioDoSistema';
 import { App } from './ui/App';
 import type { Tela } from './ui/Tela';
-import { TelaAluno } from './ui/TelaAluno';
 import { TelaCantina } from './ui/TelaCantina';
+import { TelaCesar } from './ui/TelaCesar';
+import { TelaEstudante } from './ui/TelaEstudante';
 import { TelaLogin } from './ui/TelaLogin';
 
 /*
  * Raiz de composição: o ÚNICO lugar que conhece as classes concretas.
- * Para voltar a guardar tudo só em memória (ou ir para um backend), basta trocar as quatro
- * linhas abaixo por outras implementações das mesmas portas. Nenhum caso de uso muda.
+ * Para guardar tudo só em memória (ou ir para um backend), basta trocar as implementações
+ * abaixo por outras das mesmas portas. Nenhum caso de uso muda.
  */
+const cantinas = new RepositorioDeCantinasLocal();
 const produtos = new RepositorioDeProdutosLocal();
 const pedidos = new RepositorioDePedidosLocal();
+const movimentacoes = new RepositorioDeMovimentacoesLocal();
 const usuarios = new RepositorioDeUsuariosLocal();
 const sessao = new SessaoDaAba();
 const relogio = new RelogioDoSistema();
 const caixaDeAvisos = new CaixaDeAvisosLocal();
 const notificador = new NotificadorComposto([caixaDeAvisos]);
 
+// Acesso (todos)
 const autenticacao = new Autenticacao(usuarios, sessao);
-const cadastrarAluno = new CadastrarAluno(usuarios, sessao);
+const cadastrarEstudante = new CadastrarEstudante(usuarios, sessao);
+// CESAR
+const cadastrarCantina = new CadastrarCantina(cantinas, usuarios);
+const visaoGeral = new VisaoGeralDasCantinas(cantinas, produtos, pedidos);
+// Cantina
 const cadastrarProduto = new CadastrarProduto(produtos);
-const cardapio = new GerenciarCardapio(produtos);
+const gerenciarCardapio = new GerenciarCardapio(produtos);
+const estoqueDaCantina = new EstoqueDaCantina(produtos, movimentacoes, relogio);
+const reporEstoque = new ReporEstoque(produtos, estoqueDaCantina);
+const resumoDaCantina = new ResumoDaCantina(movimentacoes, relogio);
+const painelDaCantina = new PainelDaCantina(pedidos, notificador, estoqueDaCantina);
+const configurarCantina = new ConfigurarCantina(cantinas);
+// Estudante
+const consultarCantinas = new ConsultarCantinas(cantinas, produtos, pedidos);
 const agendarCompra = new AgendarCompra(produtos, pedidos, relogio);
-const cancelarPedido = new CancelarPedido(pedidos, produtos);
-const acompanhar = new AcompanharPedidos(pedidos, notificador);
-const repor = new ReporEstoque(produtos);
+const pedidosDoEstudante = new PedidosDoEstudante(pedidos, produtos, estoqueDaCantina);
 
-prepararDadosDeDemonstracao(produtos, usuarios, cadastrarProduto);
+const prepararDados = () =>
+  prepararDadosDeDemonstracao({ cantinas, usuarios, produtos, movimentacoes }, cadastrarCantina, cadastrarProduto);
+prepararDados();
 
 function criarTela(usuario: Usuario | undefined): Tela {
   if (!usuario) {
     return new TelaLogin({
       autenticacao,
-      cadastrarAluno,
+      cadastrarEstudante,
       contasDeDemonstracao: CONTAS_DE_DEMONSTRACAO,
       restaurarDemonstracao: () => {
         apagarDadosLocais();
-        prepararDadosDeDemonstracao(produtos, usuarios, cadastrarProduto);
+        prepararDados();
       },
     });
   }
-  if (usuario.perfil === 'cantina') {
-    return new TelaCantina({ pedidos: acompanhar, cardapio, repor, cadastrar: cadastrarProduto, relogio });
+  switch (usuario.perfil) {
+    case 'cesar':
+      return new TelaCesar({ usuario, visaoGeral, cadastrarCantina });
+    case 'cantina':
+      return new TelaCantina({
+        usuario, painel: painelDaCantina, cardapio: gerenciarCardapio, estoque: estoqueDaCantina, repor: reporEstoque,
+        resumo: resumoDaCantina, cadastrar: cadastrarProduto, configurar: configurarCantina, relogio,
+      });
+    case 'estudante':
+      return new TelaEstudante({
+        usuario, avisos: caixaDeAvisos, cantinas: consultarCantinas, agendarCompra, pedidos: pedidosDoEstudante, relogio,
+      });
   }
-  return new TelaAluno({
-    usuario, avisos: caixaDeAvisos, cardapio, agendarCompra, cancelarPedido, pedidos: acompanhar, relogio,
-  });
 }
 
 const raiz = document.querySelector<HTMLElement>('#app');

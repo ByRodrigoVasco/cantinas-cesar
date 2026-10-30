@@ -27,6 +27,8 @@ export type PoliticaSalva =
  */
 export interface Reabastecivel {
   readonly quantidadeEmEstoque: number;
+  /** Quanto a cantina costuma ter; a lista de compras completa até aqui. */
+  readonly estoqueIdeal: number;
   reabastecer(quantidade: number): void;
   precisaRepor(): boolean;
   sugestaoDeReposicao(): number;

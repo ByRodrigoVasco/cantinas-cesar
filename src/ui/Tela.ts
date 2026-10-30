@@ -12,4 +12,6 @@ export interface Tela {
   aoEnviar(formulario: HTMLFormElement): void;
   aoDigitar(campo: string, valor: string): void;
   mostrarMensagem(mensagem: Mensagem | null): void;
+  /** Só para telas com envio de arquivo (ex.: foto do produto). Ler um arquivo é assíncrono. */
+  aoEscolherArquivo?(campo: string, arquivo: File): Promise<void>;
 }

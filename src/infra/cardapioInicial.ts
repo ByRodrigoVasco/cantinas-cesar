@@ -1,8 +1,9 @@
-import type { CadastrarProduto, DadosDoProduto } from '../aplicacao/CadastrarProduto';
+import type { CadastrarProduto, DadosDoProduto } from '../aplicacao/cantina/CadastrarProduto';
+import type { Usuario } from '../dominio/usuario/Usuario';
 
 /*
- * Cardápio fotografado na cantina (Imperial · Quiosque Brum).
- * - Tapioca não está no cardápio impresso, mas a tia disse que é a mais vendida: preço A CONFIRMAR.
+ * Cardápio da Imperial Padaria, fotografado na cantina (Quiosque Brum).
+ * - Tapioca não está no cardápio impresso, mas a atendente disse que é a mais vendida: preço A CONFIRMAR.
  * - Preço do Red Bull estava ilegível na foto: A CONFIRMAR.
  * - "Refrigerante lata" virou as três latas das fotos da equipe, pelo mesmo preço.
  * - Tempos de preparo e quantidades de estoque são estimativas para a demonstração.
@@ -79,9 +80,10 @@ const FOTOS: Record<string, string> = {
   'Red Bull 250ml': 'red-bull.jpg',
 };
 
-export function carregarCardapioInicial(cadastrar: CadastrarProduto): void {
+/** Cadastra o cardápio pela própria conta da Imperial, pelo mesmo caso de uso que a cantina usa. */
+export function carregarCardapioDaImperial(cadastrar: CadastrarProduto, contaDaImperial: Usuario): void {
   for (const dados of CARDAPIO) {
     const foto = FOTOS[dados.nome];
-    cadastrar.executar({ ...dados, foto: foto && `${import.meta.env.BASE_URL}produtos/${foto}` });
+    cadastrar.executar(contaDaImperial, { ...dados, foto: foto && `${import.meta.env.BASE_URL}produtos/${foto}` });
   }
 }
