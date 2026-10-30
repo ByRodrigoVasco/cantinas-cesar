@@ -73,8 +73,8 @@ export class TelaLogin implements Tela {
     return `
       <section class="destaque-login">
         <p class="sobretitulo">Cantinas do CESAR</p>
-        <h2>15 minutos de intervalo.<br />Zero minutos de fila.</h2>
-        <p>Peça antes, retire na hora e aproveite o intervalo.</p>
+        <h2>Peça antes.<br />Retire pronto.</h2>
+        <p>Agende o lanche, acompanhe o pedido e retire no balcão.</p>
       </section>
       <section class="cartao cartao-login">
         <h2 class="titulo-tela">${entrando ? 'Entrar' : 'Criar conta de estudante'}</h2>

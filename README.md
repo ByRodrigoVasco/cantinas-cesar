@@ -1,10 +1,9 @@
 # Cantinas do CESAR
 
-O intervalo tem 15 minutos e metade dele vai embora na fila da cantina. Neste app, o estudante
-agenda o lanche para o horário do intervalo e a cantina prepara na ordem certa. Quando o pedido
-fica pronto, o estudante recebe o aviso e vai direto ao balcão, sem fila. São três acessos: a
-**gestão do CESAR** cadastra as cantinas, cada **cantina** cuida dos próprios pedidos, estoque e
-cardápio, e o **estudante** pede e avalia o que comeu.
+App de pedidos antecipados para as cantinas do CESAR School. O estudante agenda o lanche para o
+horário em que vai buscar, a cantina prepara na ordem certa e avisa quando o pedido fica pronto.
+São três acessos: a **gestão do CESAR** cadastra as cantinas, cada **cantina** cuida dos próprios
+pedidos, estoque e cardápio, e o **estudante** pede e avalia o que comeu.
 
 > **Hackathon Relâmpago (FDS, cap. 5):** [onde estão os princípios de projeto no código](docs/principios.md).
 
