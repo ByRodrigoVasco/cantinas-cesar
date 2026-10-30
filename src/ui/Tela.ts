@@ -1,0 +1,13 @@
+export interface Mensagem {
+  readonly tipo: 'sucesso' | 'erro';
+  readonly texto: string;
+}
+
+/** Contrato que o App usa para desenhar e repassar eventos; cada tela cuida do próprio estado. */
+export interface Tela {
+  html(): string;
+  aoClicar(acao: string, elemento: HTMLElement): void;
+  aoEnviar(formulario: HTMLFormElement): void;
+  aoDigitar(campo: string, valor: string): void;
+  mostrarMensagem(mensagem: Mensagem | null): void;
+}
