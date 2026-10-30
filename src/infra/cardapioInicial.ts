@@ -1,9 +1,11 @@
-import type { CadastrarProduto, DadosDoProduto } from '../aplicacao/CadastrarProduto';
+import type { CadastrarProduto, DadosDoProduto } from '../aplicacao/cantina/CadastrarProduto';
+import type { Usuario } from '../dominio/usuario/Usuario';
 
 /*
- * Cardápio fotografado na cantina (Imperial · Quiosque Brum).
- * - Tapioca não está no cardápio impresso, mas a tia disse que é a mais vendida: preço A CONFIRMAR.
+ * Cardápio da Imperial Padaria, fotografado na cantina (Quiosque Brum).
+ * - Tapioca não está no cardápio impresso, mas a atendente disse que é a mais vendida: preço A CONFIRMAR.
  * - Preço do Red Bull estava ilegível na foto: A CONFIRMAR.
+ * - "Refrigerante lata" virou as três latas das fotos da equipe, pelo mesmo preço.
  * - Tempos de preparo e quantidades de estoque são estimativas para a demonstração.
  */
 
@@ -55,10 +57,33 @@ const CARDAPIO: DadosDoProduto[] = [
   prontaEntrega('Bebidas', 'Suco Recife', 7.5, 12),
   prontaEntrega('Bebidas', 'Água mineral', 5, 24),
   prontaEntrega('Bebidas', 'Água de coco', 6, 12, 3),
-  prontaEntrega('Bebidas', 'Refrigerante lata', 8, 24),
+  prontaEntrega('Bebidas', 'Coca-Cola lata', 8, 12),
+  prontaEntrega('Bebidas', 'Coca-Cola sem açúcar lata', 8, 12),
+  prontaEntrega('Bebidas', 'Guaraná Antarctica lata', 8, 12),
   prontaEntrega('Bebidas', 'Red Bull 250ml', 13.6, 12, 1),
 ];
 
-export function carregarCardapioInicial(cadastrar: CadastrarProduto): void {
-  CARDAPIO.forEach((dados) => cadastrar.executar(dados));
+/** Fotos enviadas pela equipe (public/produtos). Produto sem foto aparece com um marcador neutro. */
+const FOTOS: Record<string, string> = {
+  'Coxinha de frango': 'coxinha-frango.jpg',
+  'Coxinha de frango com requeijão': 'coxinha-frango-requeijao.jpg',
+  'Coxinha de camarão com requeijão': 'coxinha-camarao-requeijao.jpg',
+  'Coxinha de charque com requeijão': 'coxinha-charque-requeijao.jpg',
+  'Empada de frango com requeijão': 'empada-frango-requeijao.jpg',
+  'Bolo de rolo (fatia)': 'bolo-de-rolo.jpg',
+  'Pudim de leite': 'pudim-de-leite.jpg',
+  'Salada de frutas': 'salada-de-frutas.jpg',
+  'Água mineral': 'agua-com-gas.jpg',
+  'Coca-Cola lata': 'coca-cola-lata.jpg',
+  'Coca-Cola sem açúcar lata': 'coca-cola-sem-acucar-lata.jpg',
+  'Guaraná Antarctica lata': 'guarana-lata.jpg',
+  'Red Bull 250ml': 'red-bull.jpg',
+};
+
+/** Cadastra o cardápio pela própria conta da Imperial, pelo mesmo caso de uso que a cantina usa. */
+export function carregarCardapioDaImperial(cadastrar: CadastrarProduto, contaDaImperial: Usuario): void {
+  for (const dados of CARDAPIO) {
+    const foto = FOTOS[dados.nome];
+    cadastrar.executar(contaDaImperial, { ...dados, foto: foto && `${import.meta.env.BASE_URL}produtos/${foto}` });
+  }
 }

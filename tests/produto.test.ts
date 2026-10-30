@@ -5,8 +5,8 @@ import type { PoliticaDeDisponibilidade } from '../src/dominio/produto/PoliticaD
 import { PreparoNaHora } from '../src/dominio/produto/PreparoNaHora';
 import { Produto } from '../src/dominio/produto/Produto';
 
-const tapioca = () => new Produto('t', 'Tapioca', 'Tapiocas', 1000, new PreparoNaHora(6));
-const refri = (quantidade = 4) => new Produto('r', 'Refrigerante', 'Bebidas', 800, new ControleDeEstoque(10, quantidade));
+const tapioca = () => new Produto('t', 'c1', 'Tapioca', 'Tapiocas', 1000, new PreparoNaHora(6));
+const refri = (quantidade = 4) => new Produto('r', 'c1', 'Refrigerante', 'Bebidas', 800, new ControleDeEstoque(10, quantidade));
 
 describe('Substituição de Liskov: qualquer política serve no lugar da outra', () => {
   const politicas: [string, () => PoliticaDeDisponibilidade][] = [
@@ -70,7 +70,24 @@ describe('Cardápio', () => {
   });
 
   it('rejeita preço inválido', () => {
-    expect(() => new Produto('x', 'X', 'Y', 0, new PreparoNaHora(1))).toThrow(ErroDeDominio);
-    expect(() => new Produto('x', 'X', 'Y', Number.NaN, new PreparoNaHora(1))).toThrow(ErroDeDominio);
+    expect(() => new Produto('x', 'c1', 'X', 'Y', 0, new PreparoNaHora(1))).toThrow(ErroDeDominio);
+    expect(() => new Produto('x', 'c1', 'X', 'Y', Number.NaN, new PreparoNaHora(1))).toThrow(ErroDeDominio);
+  });
+});
+
+describe('Nível de estoque e baixa manual', () => {
+  it('pronta-entrega vai de "ok" para "baixo" e "esgotado"; feito na hora não tem controle', () => {
+    expect(refri(6).nivelDeEstoque()).toBe('ok');
+    expect(refri(4).nivelDeEstoque()).toBe('baixo');
+    expect(refri(0).nivelDeEstoque()).toBe('esgotado');
+    expect(tapioca().nivelDeEstoque()).toBe('sem-controle');
+  });
+
+  it('dar baixa vale mesmo fora do cardápio, mas não passa do que tem', () => {
+    const produto = refri(2);
+    produto.tirarDoCardapio();
+    produto.darBaixa(2);
+    expect(produto.quantidadeEmEstoque).toBe(0);
+    expect(() => produto.darBaixa(1)).toThrow('só tem 0');
   });
 });
