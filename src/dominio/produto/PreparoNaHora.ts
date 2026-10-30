@@ -1,5 +1,5 @@
 import { ErroDeDominio } from '../ErroDeDominio';
-import type { PoliticaDeDisponibilidade } from './PoliticaDeDisponibilidade';
+import type { PoliticaDeDisponibilidade, PoliticaSalva } from './PoliticaDeDisponibilidade';
 
 /** Produto perecível: feito na hora (tapioca, coxinha). Não tem estoque a controlar. */
 export class PreparoNaHora implements PoliticaDeDisponibilidade {
@@ -20,5 +20,9 @@ export class PreparoNaHora implements PoliticaDeDisponibilidade {
 
   descricao(): string {
     return `Feito na hora · ~${this.tempoDePreparoMin} min`;
+  }
+
+  paraDados(): PoliticaSalva {
+    return { tipo: 'feito-na-hora', tempoDePreparoMin: this.tempoDePreparoMin };
   }
 }

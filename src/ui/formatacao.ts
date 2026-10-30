@@ -1,3 +1,5 @@
+import type { ResumoDeAvaliacao } from '../dominio/pedido/resumirAvaliacoes';
+import { icone } from './icones';
 import type { Mensagem } from './Tela';
 
 const moeda = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -8,9 +10,25 @@ export function formatarPreco(centavos: number): string {
 
 const ENTIDADES: Record<string, string> = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
 
-/** Nomes vêm de quem digita (aluno, tia): nunca vão crus para o HTML. */
+/** Nomes vêm de quem digita (estudante, cantina): nunca vão crus para o HTML. */
 export function escapar(texto: string): string {
   return texto.replace(/[&<>"']/g, (caractere) => ENTIDADES[caractere]);
+}
+
+/** Foto do produto ou, sem foto, a inicial do nome num quadrado neutro. */
+export function htmlFoto(produto: { readonly nome: string; readonly foto?: string }): string {
+  return produto.foto
+    ? `<img class="produto-foto" src="${escapar(produto.foto)}" alt="" loading="lazy" />`
+    : `<span class="produto-foto produto-foto-vazia" aria-hidden="true">${escapar(produto.nome.charAt(0))}</span>`;
+}
+
+const umaCasa = new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+
+/** "★ 4,5 (12)": média das avaliações; nada quando ainda não há nenhuma. */
+export function htmlNota(resumo: ResumoDeAvaliacao | undefined): string {
+  if (!resumo) return '';
+  const avaliacoes = resumo.quantidade === 1 ? '1 avaliação' : `${resumo.quantidade} avaliações`;
+  return `<span class="nota" title="${avaliacoes}">${icone('estrela')}${umaCasa.format(resumo.media)} <small>(${resumo.quantidade})</small></span>`;
 }
 
 export function htmlMensagem(mensagem: Mensagem | null): string {

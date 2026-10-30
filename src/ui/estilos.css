@@ -1,41 +1,40 @@
 /*
- * Identidade: junção CESAR School + Imperial Padaria.
- * - CESAR: fundo creme, tipografia (Barlow nos títulos, DM Sans no texto), cantos retos, laranja para urgência.
- * - Imperial: mostarda e vinho como cores principais, títulos condensados em caixa alta, corte diagonal.
+ * Identidade: design system do CESAR School (cesar.school).
+ * - Laranja #FF6002 como cor da marca, preto #070606 como contraste, fundo branco.
+ * - Barlow nos títulos, DM Sans no texto, botões em pílula e cartões bem arredondados.
+ * Cada cantina pinta só o PRÓPRIO cardápio com as cores que escolheu (.cardapio-tematico).
  */
 :root {
-  /* Imperial */
-  --mostarda: #f7ae3e;
-  --mostarda-clara: #fdecc8;
-  --vinho: #4b0a33;
-  --vinho-claro: #f4e8ee;
-  --coroa: #d23a2f;
-  /* CESAR */
-  --creme: #fbfae6;
   --laranja: #ff6002;
+  --laranja-escuro: #dd3300;
+  --laranja-claro: #fff0e6;
+  --preto: #070606;
+  --branco: #ffffff;
+  --creme: #fbfae6;
+  --cinza: #f5f5f2;
+  --borda: #e6e4de;
+  --tinta: #070606;
+  --tinta-suave: #5f5a57;
   --indigo: #140075;
-  /* Neutros e estados */
-  --papel: #ffffff;
-  --tinta: #1d1013;
-  --tinta-suave: #6b5b5f;
-  --borda: #e9e3cf;
   --verde: #1e7a46;
   --verde-claro: #e4f3ea;
+  --vermelho: #c62828;
+  --vermelho-claro: #fdecea;
 
-  --fonte-titulo: 'Barlow Condensed', 'Arial Narrow', Arial, sans-serif;
-  --fonte-texto: 'DM Sans', 'Segoe UI', Arial, sans-serif;
-  --raio: 4px;
-  --raio-cartao: 8px;
-  --sombra: 0 1px 2px rgb(75 10 51 / 0.06), 0 8px 24px rgb(75 10 51 / 0.06);
+  --fonte-titulo: 'Barlow', Arial, Helvetica, sans-serif;
+  --fonte-texto: 'DM Sans', Arial, Helvetica, sans-serif;
+  --raio-pilula: 999px;
+  --raio-cartao: 24px;
+  --raio-campo: 12px;
 
   font-family: var(--fonte-texto);
   color: var(--tinta);
-  background: var(--creme);
+  background: var(--branco);
   -webkit-font-smoothing: antialiased;
 }
 
 * { box-sizing: border-box; }
-body { margin: 0; background: var(--creme); }
+body { margin: 0; background: var(--branco); }
 h1, h2, h3, p { margin: 0; }
 button, input { font: inherit; color: inherit; }
 button { cursor: pointer; }
@@ -46,214 +45,324 @@ button:disabled { cursor: not-allowed; opacity: 0.3; }
   position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap;
 }
 
-/* Ícones: preenchidos pela biblioteca que a equipe escolher (ver ui/icones.ts). */
-.icone { display: inline-flex; width: 1.1em; height: 1.1em; margin-right: 0.35em; vertical-align: -0.15em; }
-.icone:empty { display: none; }
+/* Ícones Lucide (ui/icones.ts): herdam a cor do texto ao redor. */
+.icone { display: inline-block; width: 1.15em; height: 1.15em; margin-right: 0.35em; vertical-align: -0.2em; flex-shrink: 0; }
+.icone-estrela path { fill: currentColor; }
 
-.titulo-condensado, .topo h1, .painel-topo h2, .subtitulo, .aba, .pedido .numero, .botao {
-  font-family: var(--fonte-titulo);
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
+/* ---------- Tipografia ---------- */
+
+.sobretitulo {
+  font-family: var(--fonte-titulo); font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em;
+  font-size: 0.8rem; color: var(--laranja);
 }
+.titulo-tela { font-family: var(--fonte-titulo); font-weight: 700; font-size: 2rem; line-height: 1.1; color: var(--tinta); }
+.subtitulo {
+  font-family: var(--fonte-titulo); font-weight: 700; font-size: 1.25rem; color: var(--tinta); margin-top: 8px;
+}
+.subtitulo .icone { color: var(--laranja); }
+.dica, .vazio { color: var(--tinta-suave); font-size: 0.92rem; line-height: 1.5; }
+.vazio { text-align: center; padding: 40px 12px; }
+.vazio .icone { display: block; width: 2.5rem; height: 2.5rem; margin: 0 auto 8px; color: var(--laranja); }
 
-/* ---------- Topo: corte diagonal mostarda / vinho (banner da Imperial) ---------- */
+/* ---------- Topo ---------- */
 
 .topo {
   display: flex; align-items: center; justify-content: space-between; gap: 16px;
-  padding: 14px 24px;
-  background: linear-gradient(115deg, var(--mostarda) 0 58%, var(--vinho) 58% 100%);
+  padding: 12px 24px; background: var(--branco); border-bottom: 1px solid var(--borda);
+  position: sticky; top: 0; z-index: 10;
 }
-.marca h1 { font-size: 2rem; line-height: 1; color: var(--vinho); font-weight: 700; }
-.marca h1 span { color: var(--coroa); }
-.marca p { font-size: 0.85rem; color: var(--vinho); }
-.marca strong { font-family: var(--fonte-titulo); text-transform: uppercase; letter-spacing: 0.06em; }
-.slogan {
-  font-family: var(--fonte-titulo); font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em;
-  color: var(--creme); text-align: right; line-height: 1.15;
+.marca { display: flex; align-items: center; gap: 12px; }
+.marca-cesar { height: 40px; width: auto; display: block; }
+.marca-produto {
+  font-family: var(--fonte-titulo); font-weight: 400; font-size: 1.5rem; color: var(--tinta);
+  padding-left: 12px; border-left: 1px solid var(--borda);
 }
-@media (max-width: 560px) {
-  .topo { background: linear-gradient(160deg, var(--mostarda) 0 64%, var(--vinho) 64% 100%); flex-direction: column; align-items: flex-start; }
-  .slogan { align-self: flex-end; font-size: 0.85rem; }
-}
+.topo-direita { display: flex; align-items: center; gap: 12px; }
+.saudacao { display: flex; align-items: center; gap: 4px; font-weight: 500; }
+.saudacao > span { display: flex; flex-direction: column; line-height: 1.15; }
+.saudacao small { font-size: 0.72rem; color: var(--tinta-suave); font-weight: 400; }
+.saudacao > .icone { color: var(--laranja); width: 1.5em; height: 1.5em; }
 
 /* ---------- Estrutura ---------- */
 
-.paineis {
-  display: grid; grid-template-columns: 1fr; gap: 16px; padding: 16px;
-  max-width: 1280px; margin: 0 auto;
+.conteudo { padding: 28px 16px 48px; }
+.tela { display: flex; flex-direction: column; gap: 16px; margin: 0 auto; }
+.tela-estudante { max-width: 760px; }
+.tela-cantina, .tela-cesar { max-width: 1100px; }
+.tela-login {
+  max-width: 1000px; display: grid; grid-template-columns: 1fr; gap: 16px; align-items: start;
 }
-@media (min-width: 960px) {
-  .paineis { grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); height: calc(100vh - 76px); }
-  .painel { min-height: 0; }
-  .painel-corpo { overflow-y: auto; }
+@media (min-width: 860px) {
+  .tela-login { grid-template-columns: 1.1fr 1fr; }
+  .destaque-login { grid-row: span 2; align-self: stretch; }
 }
 
-.painel {
-  display: flex; flex-direction: column; background: var(--papel);
-  border: 1px solid var(--borda); border-radius: var(--raio-cartao); box-shadow: var(--sombra); overflow: hidden;
+.cartao {
+  display: flex; flex-direction: column; gap: 12px; padding: 24px;
+  background: var(--cinza); border-radius: var(--raio-cartao);
 }
-.painel-topo { display: flex; align-items: center; gap: 12px; padding: 12px 18px; border-bottom: 3px solid var(--mostarda); }
-.painel-aluno .painel-topo { background: var(--papel); }
-.painel-cantina .painel-topo { background: var(--vinho); color: var(--creme); }
-.painel-cantina .painel-topo p { color: var(--mostarda-clara); }
-.painel-topo h2 { font-size: 1.35rem; font-weight: 700; line-height: 1.1; }
-.painel-topo p { color: var(--tinta-suave); font-size: 0.85rem; }
-.painel-corpo { display: flex; flex-direction: column; gap: 12px; padding: 16px 18px; flex: 1; }
+.cabecalho-tela { display: flex; flex-direction: column; gap: 4px; }
+.cabecalho-com-logo { flex-direction: row; align-items: center; gap: 16px; }
 
-.subtitulo {
-  font-size: 1.1rem; font-weight: 700; color: var(--vinho); margin-top: 10px;
-  padding-bottom: 4px; border-bottom: 2px solid var(--mostarda-clara);
+/* Bloco laranja do login, no espírito do topo do site do CESAR. */
+.destaque-login {
+  display: flex; flex-direction: column; justify-content: flex-end; gap: 12px; min-height: 260px;
+  padding: 32px; border-radius: 32px; background: var(--laranja); color: var(--preto);
 }
-.dica, .vazio { color: var(--tinta-suave); font-size: 0.9rem; }
-.vazio { text-align: center; padding: 40px 12px; line-height: 1.6; }
+.destaque-login .sobretitulo { color: var(--preto); }
+.destaque-login h2 { font-family: var(--fonte-titulo); font-weight: 400; font-size: clamp(2rem, 5vw, 3rem); line-height: 1.05; }
+.cartao-login { background: var(--branco); border: 1px solid var(--borda); }
+.cartao-demo { background: var(--preto); color: var(--branco); }
+.cartao-demo .sobretitulo { color: var(--laranja); }
+.cartao-demo .dica { color: #cfcac6; }
+.cartao-demo .botao-link { color: var(--branco); align-self: flex-start; }
+.botoes-demo { display: flex; gap: 8px; flex-wrap: wrap; }
+.botoes-demo .botao { flex: 1 1 140px; }
+.troca-de-modo { font-size: 0.92rem; color: var(--tinta-suave); }
 
 /* ---------- Campos e botões ---------- */
 
-.campo { display: flex; flex-direction: column; gap: 4px; font-size: 0.85rem; font-weight: 500; }
+.formulario { display: flex; flex-direction: column; gap: 12px; }
+.formulario-duas-colunas { display: grid; grid-template-columns: 1fr; }
+@media (min-width: 700px) { .formulario-duas-colunas { grid-template-columns: 1fr 1fr; } }
+.acoes-formulario { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; grid-column: 1 / -1; }
+.campo { display: flex; flex-direction: column; gap: 4px; font-size: 0.9rem; font-weight: 500; }
 .campo input {
-  padding: 10px 12px; border: 1px solid var(--borda); border-radius: var(--raio); background: var(--papel); font-weight: 400;
+  padding: 11px 14px; border: 1px solid var(--borda); border-radius: var(--raio-campo); background: var(--branco); font-weight: 400;
 }
-.campo input:focus { border-color: var(--vinho); }
+.campo input:focus { border-color: var(--laranja); }
+.campo small { font-weight: 400; color: var(--tinta-suave); font-size: 0.8rem; }
+
 .botao {
-  border: 0; border-radius: var(--raio); padding: 9px 18px; font-size: 1.05rem; font-weight: 700; white-space: nowrap;
-  transition: transform 0.05s ease, filter 0.15s ease;
+  display: inline-flex; align-items: center; justify-content: center; gap: 2px;
+  border: 1px solid transparent; border-radius: var(--raio-pilula); padding: 10px 24px;
+  font-family: var(--fonte-texto); font-size: 1rem; font-weight: 500; white-space: nowrap; text-decoration: none;
+  transition: transform 0.05s ease, filter 0.15s ease, background 0.15s ease;
 }
 .botao:active { transform: scale(0.97); }
-.botao:hover { filter: brightness(0.95); }
-.botao-primario { background: var(--mostarda); color: var(--vinho); }
+.botao:hover { filter: brightness(0.94); }
+.botao-primario { background: var(--laranja); color: var(--preto); }
+.botao-contorno { background: transparent; color: inherit; border-color: currentColor; }
+.cartao-demo .botao-contorno:hover { background: var(--laranja); color: var(--preto); border-color: var(--laranja); filter: none; }
 .botao-largo { width: 100%; padding: 13px; }
-.botao-pronto { background: var(--verde); color: #fff; font-size: 1.2rem; padding: 10px 24px; }
-.botao-whatsapp { display: block; text-align: center; text-decoration: none; background: #25d366; color: #06361a; padding: 13px; }
+.botao-pronto { background: var(--verde); color: var(--branco); font-weight: 700; padding: 10px 22px; }
+.botao-whatsapp { background: #25d366; color: #06361a; width: 100%; padding: 13px; }
+.botao-sair { background: var(--preto); color: var(--branco); padding: 7px 18px; }
 .botao-link {
-  background: none; border: 0; padding: 4px; color: var(--vinho); text-decoration: underline;
-  text-underline-offset: 2px; font-size: 0.85rem;
+  background: none; border: 0; padding: 4px; color: var(--tinta); text-decoration: underline;
+  text-underline-offset: 3px; font-size: 0.9rem;
 }
 .botao-redondo {
-  width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--borda); background: var(--papel);
-  font-size: 1.1rem; line-height: 1; display: grid; place-items: center; color: var(--vinho);
+  width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--borda); background: var(--branco);
+  font-size: 1.15rem; line-height: 1; display: grid; place-items: center;
 }
-.botao-mais { background: var(--mostarda); border-color: var(--mostarda); font-weight: 700; }
+.botao-mais { background: var(--laranja); border-color: var(--laranja); color: var(--preto); font-weight: 700; }
 
-.mensagem { padding: 10px 12px; border-radius: var(--raio); font-size: 0.9rem; border-left: 4px solid; }
-.mensagem-sucesso { background: var(--verde-claro); color: #145332; border-color: var(--verde); }
-.mensagem-erro { background: #fdeceb; color: #9e2018; border-color: var(--coroa); }
+.mensagem { padding: 12px 16px; border-radius: var(--raio-campo); font-size: 0.92rem; }
+.mensagem-sucesso { background: var(--verde-claro); color: #145332; }
+.mensagem-erro { background: var(--vermelho-claro); color: #9e1c1c; }
+
+.ajuda { font-size: 0.88rem; color: var(--tinta-suave); }
+.ajuda summary { cursor: pointer; font-weight: 500; color: var(--tinta); }
+.ajuda ol, .ajuda ul { margin: 6px 0 0; padding-left: 20px; line-height: 1.55; }
+
+/* ---------- Logos e cartões de cantina ---------- */
+
+.logo-cantina { width: 64px; height: 64px; border-radius: 16px; object-fit: cover; flex-shrink: 0; background: var(--cinza); }
+.logo-vazio { display: grid; place-items: center; color: var(--laranja); }
+.logo-vazio .icone { width: 28px; height: 28px; margin: 0; }
+
+.grade-cantinas { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+.cartao-situacao header { display: flex; align-items: center; gap: 12px; }
+.cartao-situacao h3 { font-family: var(--fonte-titulo); font-size: 1.3rem; }
+.cartao-situacao header p { color: var(--tinta-suave); font-size: 0.88rem; }
+.numeros { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 0; }
+.numeros div { background: var(--branco); border-radius: 16px; padding: 10px 12px; }
+.numeros dt { font-size: 0.75rem; color: var(--tinta-suave); }
+.numeros dd { margin: 0; font-family: var(--fonte-titulo); font-weight: 700; font-size: 1.6rem; }
+.avaliacao-geral { font-size: 0.9rem; color: var(--tinta-suave); }
+
+.cartao-cantina {
+  display: flex; align-items: center; gap: 14px; padding: 16px; text-align: left; width: 100%;
+  background: var(--branco); border: 1px solid var(--borda); border-left: 8px solid var(--tema-principal);
+  border-radius: var(--raio-cartao); transition: transform 0.1s ease, box-shadow 0.15s ease;
+}
+.cartao-cantina:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgb(7 6 6 / 0.08); }
+.cartao-cantina-texto { display: flex; flex-direction: column; gap: 2px; }
+.cartao-cantina-texto strong { font-family: var(--fonte-titulo); font-size: 1.3rem; }
+.cartao-cantina-texto small { color: var(--tinta-suave); }
+
+.nota { display: inline-flex; align-items: center; font-size: 0.85rem; font-weight: 500; color: var(--tinta); }
+.nota .icone { color: var(--laranja); margin-right: 0.2em; }
+.nota small { color: var(--tinta-suave); font-weight: 400; margin-left: 2px; }
+
+/* ---------- Cardápio com as cores da cantina ---------- */
+
+.cardapio-tematico {
+  border: 1px solid var(--borda); border-radius: var(--raio-cartao); overflow: clip; background: var(--branco);
+}
+.cabecalho-cantina {
+  display: flex; align-items: center; gap: 16px; padding: 20px;
+  background: var(--tema-principal); color: var(--tema-texto-principal); border-bottom: 5px solid var(--tema-sec2);
+}
+.cabecalho-cantina > div { flex: 1; }
+.cabecalho-cantina h2 { font-family: var(--fonte-titulo); font-weight: 700; font-size: 1.6rem; line-height: 1.1; }
+.cabecalho-cantina p { opacity: 0.85; }
+.botao-trocar { background: transparent; color: inherit; border-color: currentColor; padding: 6px 16px; }
+.corpo-cardapio { display: flex; flex-direction: column; gap: 8px; padding: 8px 20px 12px; }
+.categoria-tematica {
+  align-self: flex-start; display: inline-flex; align-items: center; margin-top: 12px; padding: 5px 16px;
+  border-radius: var(--raio-pilula); background: var(--tema-sec1); color: var(--tema-texto-sec1);
+  font-family: var(--fonte-titulo); font-weight: 700; font-size: 1rem; text-transform: uppercase; letter-spacing: 0.04em;
+}
+.cardapio-tematico .botao-mais { background: var(--tema-principal); border-color: var(--tema-principal); color: var(--tema-texto-principal); }
+.cardapio-tematico .nota .icone { color: var(--tema-sec2); }
+.cardapio-tematico .carrinho { background: var(--tema-sec1); color: var(--tema-texto-sec1); }
+.botao-agendar { background: var(--tema-principal); color: var(--tema-texto-principal); }
+
+.previa { max-width: 420px; }
+.previa-linha { display: flex; align-items: center; gap: 12px; padding: 10px 0; }
+.previa-linha span:first-child { flex: 1; }
 
 /* ---------- Produtos ---------- */
 
 .lista-produtos { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
 .produto {
   display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: 12px;
-  padding: 10px 0; border-bottom: 1px solid var(--borda);
+  padding: 12px 0; border-bottom: 1px solid var(--borda);
 }
 .produto:last-child { border-bottom: 0; }
-.produto-info { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-.produto-info strong { font-size: 0.95rem; font-weight: 500; }
-.produto-info small { color: var(--tinta-suave); font-size: 0.8rem; }
-.preco { font-weight: 700; color: var(--vinho); font-variant-numeric: tabular-nums; }
-.contador { display: flex; align-items: center; gap: 8px; min-width: 32px; justify-content: flex-end; }
-.contador span { min-width: 1ch; text-align: center; font-weight: 700; }
-.produto-esgotado .produto-info, .produto-esgotado .preco { opacity: 0.4; }
-.produto-fora .produto-info { opacity: 0.45; }
-
-.campo-quantidade input {
-  width: 72px; padding: 8px; border: 1px solid var(--borda); border-radius: var(--raio); text-align: center;
+.produto:has(.produto-foto) { grid-template-columns: auto 1fr auto auto; }
+.produto-foto { width: 60px; height: 60px; border-radius: 16px; object-fit: cover; background: var(--cinza); }
+.produto-foto-vazia {
+  display: grid; place-items: center; font-family: var(--fonte-titulo); font-size: 1.5rem; font-weight: 700;
+  color: var(--tinta-suave); background: var(--cinza);
 }
+.produto-info { display: flex; flex-direction: column; gap: 2px; min-width: 0; align-items: flex-start; }
+.produto-info strong { font-size: 0.98rem; font-weight: 500; }
+.produto-info small { color: var(--tinta-suave); font-size: 0.8rem; }
+.preco { font-weight: 700; font-variant-numeric: tabular-nums; }
+.contador { display: flex; align-items: center; gap: 8px; min-width: 34px; justify-content: flex-end; }
+.contador span { min-width: 1ch; text-align: center; font-weight: 700; }
+.produto-esgotado .produto-info, .produto-esgotado .preco, .produto-esgotado .produto-foto { opacity: 0.4; }
+.produto-fora .produto-info, .produto-fora .produto-foto { opacity: 0.45; }
+
+.campo-quantidade input { width: 76px; padding: 8px; border: 1px solid var(--borda); border-radius: var(--raio-campo); text-align: center; }
 
 .interruptor {
-  width: 46px; height: 26px; border-radius: 13px; border: 0; background: #d8cfc2; position: relative;
+  width: 46px; height: 26px; border-radius: 13px; border: 0; background: #d6d3cd; position: relative;
   transition: background 0.15s ease;
 }
 .interruptor::after {
   content: ''; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%;
   background: #fff; transition: transform 0.15s ease; box-shadow: 0 1px 2px rgb(0 0 0 / 0.2);
 }
-.interruptor-ligado { background: var(--verde); }
+.interruptor-ligado { background: var(--laranja); }
 .interruptor-ligado::after { transform: translateX(20px); }
 
-/* ---------- Carrinho e pedidos do aluno ---------- */
+/* ---------- Carrinho ---------- */
 
 .carrinho {
-  position: sticky; bottom: 0; margin: 4px -18px -16px; padding: 12px 18px;
+  position: sticky; bottom: 0; padding: 14px 20px;
   display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
-  background: var(--vinho); color: var(--creme); border-top: 3px solid var(--mostarda);
+  background: var(--preto); color: var(--branco);
 }
-.carrinho-vazio { color: var(--mostarda-clara); font-size: 0.9rem; justify-content: center; text-align: center; }
-.carrinho-resumo { flex: 1; min-width: 140px; display: flex; flex-direction: column; }
-.carrinho-resumo strong { font-family: var(--fonte-titulo); font-size: 1.5rem; line-height: 1; }
-.carrinho-resumo small { color: var(--mostarda-clara); font-size: 0.8rem; }
-.campo-horario { display: flex; flex-direction: column; font-size: 0.75rem; color: var(--mostarda-clara); gap: 2px; }
-.campo-horario input { padding: 6px 8px; border-radius: var(--raio); border: 0; color: var(--tinta); }
+.carrinho-vazio { justify-content: center; text-align: center; font-size: 0.92rem; opacity: 0.95; }
+.carrinho-resumo { flex: 1; min-width: 150px; display: flex; flex-direction: column; }
+.carrinho-resumo strong { font-family: var(--fonte-titulo); font-size: 1.6rem; line-height: 1; }
+.carrinho-resumo small { font-size: 0.8rem; opacity: 0.85; }
+.campo-horario { display: flex; flex-direction: column; font-size: 0.75rem; gap: 2px; opacity: 0.95; }
+.campo-horario input { padding: 7px 10px; border-radius: var(--raio-campo); border: 0; color: var(--tinta); background: var(--branco); }
 
-.meus-pedidos { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
-.meu-pedido {
-  display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap;
-  padding: 10px 12px; border-radius: var(--raio); background: var(--creme); border: 1px solid var(--borda);
-}
-.meu-pedido div { flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 160px; }
-.meu-pedido small { color: var(--tinta-suave); font-size: 0.8rem; }
-.status-retirado, .status-cancelado { opacity: 0.55; }
-.selo {
-  font-family: var(--fonte-titulo); text-transform: uppercase; letter-spacing: 0.04em;
-  font-size: 0.85rem; font-weight: 700; padding: 3px 10px; border-radius: var(--raio); white-space: nowrap;
-}
-.selo-agendado { background: var(--mostarda-clara); color: var(--vinho); }
-.selo-pronto { background: var(--verde); color: #fff; }
-.selo-retirado { background: #ece8e3; color: #6b6466; }
-.selo-cancelado { background: #ece8e3; color: #6b6466; text-decoration: line-through; }
+/* ---------- Pedidos do estudante e avaliação ---------- */
+
+.meus-pedidos { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.meu-pedido { padding: 14px 16px; border-radius: 20px; background: var(--cinza); }
+.meu-pedido-linha { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+.meu-pedido-linha > div { flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 180px; }
+.meu-pedido small { color: var(--tinta-suave); font-size: 0.82rem; }
+.status-cancelado { opacity: 0.55; }
+.selo { font-size: 0.78rem; font-weight: 700; padding: 4px 12px; border-radius: var(--raio-pilula); white-space: nowrap; }
+.selo-agendado { background: var(--laranja-claro); color: var(--laranja-escuro); }
+.selo-pronto { background: var(--verde); color: var(--branco); }
+.selo-retirado, .selo-cancelado { background: #e8e6e1; color: #5f5a57; }
+.selo-cancelado { text-decoration: line-through; }
+.pedidos-anteriores summary { cursor: pointer; font-weight: 500; padding: 4px 0; }
+.pedidos-anteriores .meus-pedidos { margin-top: 8px; }
+
+.avaliacao { margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--borda); }
+.avaliacao-titulo { font-size: 0.88rem; font-weight: 500; margin-bottom: 6px; }
+.avaliacao ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.avaliacao-item { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.estrelas { display: flex; gap: 2px; }
+.estrela { background: none; border: 0; padding: 4px; color: #cfcac4; line-height: 0; border-radius: 8px; }
+.estrela .icone { width: 26px; height: 26px; margin: 0; }
+.estrela:hover, .estrela-cheia { color: var(--laranja); }
 
 .aviso-pronto {
-  display: flex; align-items: center; gap: 12px; padding: 14px; border-radius: var(--raio-cartao);
+  display: flex; align-items: center; gap: 12px; padding: 16px; border-radius: 20px;
   background: var(--verde-claro); border: 2px solid var(--verde); animation: chegou 0.6s ease;
 }
 .aviso-pronto p { flex: 1; font-weight: 700; color: #145332; }
+.aviso-pronto > .icone { width: 1.8rem; height: 1.8rem; margin: 0; color: var(--verde); }
 @keyframes chegou { from { transform: translateY(-6px); opacity: 0; } }
 
 /* ---------- Painel da cantina ---------- */
 
 .abas { display: flex; gap: 6px; flex-wrap: wrap; }
 .aba {
-  border: 1px solid var(--borda); background: var(--papel); border-radius: var(--raio);
-  padding: 6px 14px; font-size: 1rem; font-weight: 600; color: var(--vinho);
+  border: 1px solid var(--borda); background: var(--branco); border-radius: var(--raio-pilula);
+  padding: 8px 18px; font-weight: 500; font-size: 0.95rem;
 }
-.aba-ativa { background: var(--vinho); border-color: var(--vinho); color: var(--creme); }
+.aba-ativa { background: var(--preto); border-color: var(--preto); color: var(--branco); }
 .contador-aba {
-  display: inline-block; min-width: 20px; padding: 0 6px; border-radius: var(--raio); margin-left: 4px;
-  background: var(--mostarda); color: var(--vinho); font-size: 0.85rem; text-align: center;
+  display: inline-block; min-width: 20px; padding: 0 6px; border-radius: var(--raio-pilula); margin-left: 4px;
+  background: var(--laranja); color: var(--preto); font-size: 0.8rem; text-align: center;
 }
 
-.resumo { background: var(--mostarda-clara); border-radius: var(--raio-cartao); padding: 12px; }
-.resumo .subtitulo { margin: 0 0 8px; border: 0; padding: 0; }
+.resumo { background: var(--laranja-claro); border-radius: var(--raio-cartao); padding: 16px 20px; }
+.resumo .subtitulo { margin: 0 0 8px; }
 .etiquetas { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
-.etiquetas li { background: var(--papel); border-radius: var(--raio); padding: 4px 12px; font-size: 0.95rem; }
-.etiquetas b { color: var(--vinho); }
+.etiquetas li { background: var(--branco); border-radius: var(--raio-pilula); padding: 5px 14px; font-size: 0.95rem; }
 
-.fila { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }
+.fila { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 14px; }
 .pedido {
-  display: flex; flex-direction: column; gap: 8px; padding: 14px; border-radius: var(--raio-cartao);
-  background: var(--papel); border: 1px solid var(--borda); border-top: 4px solid var(--mostarda); box-shadow: var(--sombra);
+  display: flex; flex-direction: column; gap: 8px; padding: 18px; border-radius: var(--raio-cartao);
+  background: var(--cinza); border: 2px solid transparent;
 }
 .pedido header { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
-.pedido .numero { font-size: 1.4rem; font-weight: 700; color: var(--vinho); line-height: 1; }
+.pedido .numero { font-family: var(--fonte-titulo); font-size: 1.5rem; font-weight: 700; line-height: 1; }
 .pedido .retirada { margin-left: auto; font-size: 0.85rem; color: var(--tinta-suave); font-variant-numeric: tabular-nums; }
-.pedido .itens { margin: 0; padding-left: 18px; font-size: 0.95rem; }
-.pedido .receber { font-size: 0.85rem; color: var(--tinta-suave); }
+.pedido .itens { margin: 0; padding-left: 18px; }
+.pedido .receber { font-size: 0.88rem; color: var(--tinta-suave); }
 .pedido .receber b { color: var(--tinta); }
 .pedido footer { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; margin-top: auto; }
-.pedido footer small { font-size: 0.8rem; color: var(--tinta-suave); }
-.pedido-urgente { border-top-color: var(--laranja); background: #fff7f1; }
-.texto-urgente { color: var(--laranja) !important; font-weight: 700; }
-.pedido-pronto { border-top-color: var(--verde); background: var(--verde-claro); }
+.pedido footer small { font-size: 0.82rem; color: var(--tinta-suave); }
+.pedido-urgente { border-color: var(--laranja); background: var(--laranja-claro); }
+.texto-urgente { color: var(--laranja-escuro) !important; font-weight: 700; }
+.pedido-pronto { background: var(--verde-claro); }
 
-.formulario { display: flex; flex-direction: column; gap: 12px; }
-.escolha { border: 1px solid var(--borda); border-radius: var(--raio); padding: 10px 12px; display: flex; gap: 16px; flex-wrap: wrap; }
-.escolha legend { font-size: 0.85rem; font-weight: 500; padding: 0 4px; }
+.escolha { border: 1px solid var(--borda); border-radius: var(--raio-campo); padding: 10px 14px; display: flex; gap: 16px; flex-wrap: wrap; }
+.escolha legend { font-size: 0.9rem; font-weight: 500; padding: 0 4px; }
 .escolha label { display: flex; align-items: center; gap: 6px; }
-.escolha input { accent-color: var(--vinho); }
+.escolha input { accent-color: var(--laranja); }
 .formulario:has(input[value='perecivel']:checked) .so-pronta-entrega,
 .formulario:has(input[value='nao-perecivel']:checked) .so-feito-na-hora { display: none; }
 
-/* ---------- Ajuda ---------- */
+.campo-cor { display: flex; align-items: center; gap: 14px; }
+.campo-cor input { width: 56px; height: 56px; padding: 0; border: 1px solid var(--borda); border-radius: 16px; background: none; cursor: pointer; }
+.campo-cor span { display: flex; flex-direction: column; }
+.campo-cor small { color: var(--tinta-suave); }
 
-.ajuda { font-size: 0.85rem; color: var(--tinta-suave); }
-.ajuda summary { cursor: pointer; font-weight: 500; color: var(--vinho); }
-.ajuda ol, .ajuda ul { margin: 6px 0 0; padding-left: 20px; line-height: 1.5; }
+/* ---------- Celular ---------- */
+
+@media (max-width: 560px) {
+  .topo { padding: 10px 16px; }
+  .marca-cesar { height: 32px; }
+  .marca-produto { font-size: 1.2rem; }
+  .saudacao > span { display: none; }
+  .botao-sair { padding: 7px 12px; }
+  .titulo-tela { font-size: 1.6rem; }
+  .cabecalho-cantina { flex-wrap: wrap; }
+  .logo-cantina { width: 52px; height: 52px; }
+}

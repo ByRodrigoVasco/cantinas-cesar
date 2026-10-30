@@ -1,5 +1,5 @@
 import { ErroDeDominio } from '../ErroDeDominio';
-import type { PoliticaDeDisponibilidade, Reabastecivel } from './PoliticaDeDisponibilidade';
+import type { PoliticaDeDisponibilidade, PoliticaSalva, Reabastecivel } from './PoliticaDeDisponibilidade';
 
 /** Abaixo desta fração do estoque ideal, o item entra sozinho na lista de compras. */
 const FRACAO_PARA_REPOR = 0.5;
@@ -10,7 +10,7 @@ export class ControleDeEstoque implements PoliticaDeDisponibilidade, Reabasteciv
   private quantidade: number;
 
   constructor(
-    private readonly estoqueIdeal: number,
+    readonly estoqueIdeal: number,
     quantidadeInicial: number = estoqueIdeal,
   ) {
     if (!(estoqueIdeal > 0)) throw new ErroDeDominio('Estoque ideal deve ser maior que zero.');
@@ -50,5 +50,9 @@ export class ControleDeEstoque implements PoliticaDeDisponibilidade, Reabasteciv
 
   descricao(): string {
     return this.quantidade > 0 ? `Pronta-entrega · ${this.quantidade} no estoque` : 'Esgotado';
+  }
+
+  paraDados(): PoliticaSalva {
+    return { tipo: 'estoque', estoqueIdeal: this.estoqueIdeal, quantidade: this.quantidade };
   }
 }
