@@ -6,7 +6,7 @@ fica pronto, o estudante recebe o aviso e vai direto ao balcão, sem fila. São 
 **gestão do CESAR** cadastra as cantinas, cada **cantina** cuida dos próprios pedidos, estoque e
 cardápio, e o **estudante** pede e avalia o que comeu.
 
-> **Hackathon Relâmpago (FDS, cap. 5):** [onde estão os princípios de projeto no código](docs/principios.md), com arquitetura, heurísticas de usabilidade e decisões.
+> **Hackathon Relâmpago (FDS, cap. 5):** [onde estão os princípios de projeto no código](docs/principios.md).
 
 ## Tecnologias
 
@@ -17,18 +17,17 @@ cardápio, e o **estudante** pede e avalia o que comeu.
 ![CSS3](https://img.shields.io/badge/css3-%231572B6.svg?style=for-the-badge&logo=css3&logoColor=white)
 ![GitHub](https://img.shields.io/badge/github-%23181717.svg?style=for-the-badge&logo=github&logoColor=white)
 
-- **Linguagem:** TypeScript, com regras de negócio em classes separadas da interface.
+- **Linguagem:** TypeScript.
 - **Build e servidor de desenvolvimento:** [Vite](https://vitejs.dev/).
-- **Testes:** [Vitest](https://vitest.dev/), para domínio, casos de uso e permissões.
-- **Interface:** HTML e CSS sem framework, no design system do [CESAR School](https://www.cesar.school), com ícones [Lucide](https://lucide.dev) e fontes Barlow e DM Sans.
-- **Dados:** armazenamento do navegador (`localStorage`), sem backend.
-- **Versionamento:** GitHub, com a branch `develop` recebendo cada feature antes da `main`.
+- **Testes:** [Vitest](https://vitest.dev/).
+- **Interface:** HTML e CSS, no design system do [CESAR School](https://www.cesar.school).
+- **Dados:** armazenamento do navegador, sem backend.
 
 ## Como rodar
 
 ### 1. Instalar o Node.js
 
-Baixe a versão **LTS** em [nodejs.org](https://nodejs.org/) (18 ou mais nova) e instale.
+Baixe a versão **LTS** em [nodejs.org](https://nodejs.org/) e instale.
 
 ### 2. Baixar o projeto
 
@@ -49,9 +48,7 @@ npm install
 npm run dev
 ```
 
-Acesse [http://localhost:5173](http://localhost:5173). Na tela de login, os botões do **Modo demonstração**
-entram como estudante, cantina ou gestão do CESAR sem digitar nada. Para ver o aviso de "pronto"
-chegando, abra o estudante numa aba e a cantina em outra.
+Acesse [http://localhost:5173](http://localhost:5173) e use os botões do **Modo demonstração**, na tela de login.
 
 ### 5. Rodar os testes
 
@@ -59,19 +56,13 @@ chegando, abra o estudante numa aba e a cantina em outra.
 npm test
 ```
 
-> **Dados de demonstração:** a cantina Imperial Padaria e as contas de teste já vêm criadas
-> ([`dadosDeDemonstracao.ts`](src/infra/dadosDeDemonstracao.ts)). O botão **Restaurar dados iniciais**,
-> na tela de login, volta tudo ao começo.
-
 ## Squad
 
-Fotos ficam em [`docs/assets/team/`](docs/assets/team).
-
-| Foto | Nome | GitHub | LinkedIn | Email |
-|---|---|---|---|---|
-| <img src="docs/assets/team/anderson-santos.png" alt="Anderson Santos" width="80"> | Anderson Santos | [acampospsantos](https://github.com/acampospsantos) | [andersoncampospsantos](https://www.linkedin.com/in/andersoncampospsantos) | acps@cesar.school |
-| <img src="docs/assets/team/joao-vitor-medeiros.png" alt="João Vitor Medeiros" width="80"> | João Vitor Medeiros | [JvMedeiros7](https://github.com/JvMedeiros7) | [jvmedeiros7](https://www.linkedin.com/in/jvmedeiros7/) | jvm7@cesar.school |
-| <img src="docs/assets/team/julio-cesar-lins.png" alt="Julio Cesar Lins" width="80"> | Julio Cesar Lins | [Lins-ju](https://github.com/Lins-ju) | [júlio-lins](https://www.linkedin.com/in/j%C3%BAlio-lins-123905182/) | jcsl@cesar.school |
-| <img src="docs/assets/team/laura-brayner.png" alt="Laura Brayner" width="80"> | Laura Brayner | [laurabrayner](https://github.com/laurabrayner) | [laurabrayner](https://www.linkedin.com/in/laurabrayner) | lcbc@cesar.school |
-| <img src="docs/assets/team/luan-arruda.png" alt="Luan Arruda" width="80"> | Luan Arruda | [luan-arruda](https://github.com/luan-arruda) | [luan-arruda-548a9534b](https://www.linkedin.com/in/luan-arruda-548a9534b) | las9@cesar.school |
-| <img src="docs/assets/team/rodrigo-vasco.png" alt="Rodrigo Vasco" width="80"> | Rodrigo Vasco | [ByRodrigoVasco](https://github.com/ByRodrigoVasco) | [rodrigo-vlm](https://www.linkedin.com/in/rodrigo-vlm/) | rvlm@cesar.school |
+| Foto | Nome | GitHub | LinkedIn |
+|---|---|---|---|
+| <img src="docs/assets/team/anderson-santos.png" alt="Anderson Santos" width="80"> | Anderson Santos | [acampospsantos](https://github.com/acampospsantos) | [andersoncampospsantos](https://www.linkedin.com/in/andersoncampospsantos) |
+| <img src="docs/assets/team/joao-vitor-medeiros.png" alt="João Vitor Medeiros" width="80"> | João Vitor Medeiros | [JvMedeiros7](https://github.com/JvMedeiros7) | [jvmedeiros7](https://www.linkedin.com/in/jvmedeiros7/) |
+| <img src="docs/assets/team/julio-cesar-lins.png" alt="Julio Cesar Lins" width="80"> | Julio Cesar Lins | [Lins-ju](https://github.com/Lins-ju) | [júlio-lins](https://www.linkedin.com/in/j%C3%BAlio-lins-123905182/) |
+| <img src="docs/assets/team/laura-brayner.png" alt="Laura Brayner" width="80"> | Laura Brayner | [laurabrayner](https://github.com/laurabrayner) | [laurabrayner](https://www.linkedin.com/in/laurabrayner) |
+| <img src="docs/assets/team/luan-arruda.png" alt="Luan Arruda" width="80"> | Luan Arruda | [luan-arruda](https://github.com/luan-arruda) | [luan-arruda-548a9534b](https://www.linkedin.com/in/luan-arruda-548a9534b) |
+| <img src="docs/assets/team/rodrigo-vasco.png" alt="Rodrigo Vasco" width="80"> | Rodrigo Vasco | [ByRodrigoVasco](https://github.com/ByRodrigoVasco) | [rodrigo-vlm](https://www.linkedin.com/in/rodrigo-vlm/) |
