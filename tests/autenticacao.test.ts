@@ -56,7 +56,7 @@ describe('CESAR cria cantinas', () => {
     const conta = c.casos.autenticacao.entrar('nova@cantina.com', 'senha123');
     expect(conta.perfil).toBe('cantina');
     expect(conta.cantinaId).toBe(cantina.id);
-    expect(c.casos.consultar.listar().map((x) => x.nome)).toContain('Lanchonete Nova');
+    expect(c.casos.consultar.vitrine().map((x) => x.cantina.nome)).toContain('Lanchonete Nova');
   });
 
   it('só o CESAR cria cantina', () => {
@@ -65,9 +65,9 @@ describe('CESAR cria cantinas', () => {
   });
 
   it('e-mail já usado não cria nada pela metade', () => {
-    const antes = c.casos.consultar.listar().length;
+    const antes = c.casos.consultar.vitrine().length;
     expect(() => c.casos.cadastrarCantina.executar(c.gestao, { ...dados, email: 'ana@cesar.school' })).toThrow('já é usado');
     expect(() => c.casos.cadastrarCantina.executar(c.gestao, { ...dados, senha: '123' })).toThrow(ErroDeDominio);
-    expect(c.casos.consultar.listar()).toHaveLength(antes);
+    expect(c.casos.consultar.vitrine()).toHaveLength(antes);
   });
 });

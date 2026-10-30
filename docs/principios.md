@@ -34,10 +34,10 @@ src/
 │   ├── autorizacao.ts  quem pode o quê (exigirPerfil, cantinaDe)
 │   ├── acesso/     Autenticacao, CadastrarEstudante
 │   ├── cesar/      CadastrarCantina, VisaoGeralDasCantinas
-│   ├── cantina/    PainelDaCantina, EstoqueDaCantina, ResumoDaCantina, ReporEstoque, GerenciarCardapio, CadastrarProduto, ConfigurarCantina
+│   ├── cantina/    PainelDaCantina, EstoqueDaCantina, ReporEstoque, GerenciarCardapio, CadastrarProduto, ConfigurarCantina
 │   └── estudante/  ConsultarCantinas, AgendarCompra, PedidosDoEstudante
 ├── infra/          armazenamento do navegador, memória (testes), relógio, dados de demonstração
-├── ui/             uma tela por acesso + login (só desenham e repassam eventos)
+├── ui/             uma tela por acesso + login; o HTML de cada aba da cantina fica em ui/cantina/
 └── main.ts         raiz de composição: único lugar que conhece as classes concretas
 ```
 
@@ -47,13 +47,33 @@ src/
 |---|---|---|
 | **Composição em vez de herança** | [`Produto`](../src/dominio/produto/Produto.ts) **tem uma** [`PoliticaDeDisponibilidade`](../src/dominio/produto/PoliticaDeDisponibilidade.ts) | "Perecível" e "não perecível" não são subclasses de Produto, e sim comportamentos plugados ([`PreparoNaHora`](../src/dominio/produto/PreparoNaHora.ts), [`ControleDeEstoque`](../src/dominio/produto/ControleDeEstoque.ts)). Um jeito novo de vender é uma política nova. |
 | **Substituição de Liskov** | As duas políticas cumprem o mesmo contrato, testado em [`produto.test.ts`](../tests/produto.test.ts) | Nenhuma lança "não suportado". `PreparoNaHora.liberar()` é um no-op legítimo. |
-| **Segregação de Interfaces** | `Reabastecivel` × `PoliticaDeDisponibilidade`; `Notificador` × `LeitorDeAvisos` em [`portas.ts`](../src/aplicacao/portas.ts); `RegistroDeVendas = Pick<EstoqueDaCantina, 'registrarVendaDoApp'>` | Quem é feito na hora não implementa `reabastecer()`. Quem só avisa não precisa ler avisos. O painel e o estudante dependem só do método que registra a venda, não do estoque inteiro. |
+| **Segregação de Interfaces** | `Reabastecivel` × `PoliticaDeDisponibilidade`; `Notificador` × `LeitorDeAvisos` em [`portas.ts`](../src/aplicacao/portas.ts); `RegistroDeVendas = Pick<EstoqueDaCantina, 'registrarVendaDoApp'>`; [`Tela`](../src/ui/Tela.ts) dividida em `ReageACliques`, `ReageAFormularios`, `ReageADigitacao` e `ReageAArquivos` | Quem é feito na hora não implementa `reabastecer()`. Quem só avisa não precisa ler avisos. O painel e o estudante dependem só do método que registra a venda. Cada tela implementa só a interação que tem: a do CESAR só tem formulário e não carrega métodos vazios. |
 | **Inversão de Dependências** | [`portas.ts`](../src/aplicacao/portas.ts) + [`main.ts`](../src/main.ts) | Casos de uso dependem de `RepositorioDePedidos`, `Sessao`, `Relogio`… nunca do navegador ou de `Date`. **Prova:** passamos de "tudo em memória" para "tudo no `localStorage`" mudando só `main.ts`. Os testes usam as versões em memória e um `RelogioParado`. |
-| **Aberto/Fechado** | [`NotificadorComposto`](../src/infra/notificadores.ts), [`restaurarPolitica`](../src/dominio/produto/restaurarPolitica.ts) | Um canal de aviso novo (som, WhatsApp, e-mail) é uma classe nova + uma linha em `main.ts`. Cantina nova é **dado**, não código: o CESAR cria pela tela. |
+| **Aberto/Fechado** | [`NotificadorComposto`](../src/infra/notificadores.ts), [`restaurarPolitica`](../src/dominio/produto/restaurarPolitica.ts) | Um canal de aviso novo (som, WhatsApp, e-mail) é uma classe nova + uma linha em `main.ts`. Uma política de venda nova é uma classe com `paraDados`/`deDados` + uma linha no registro de políticas, sem `if` ou `switch`; o compilador acusa se a linha faltar. Cantina nova é **dado**, não código: o CESAR cria pela tela. |
 | **Ocultamento de informação** | [`Pedido`](../src/dominio/pedido/Pedido.ts), [`Usuario`](../src/dominio/usuario/Usuario.ts), [`Cantina`](../src/dominio/cantina/Cantina.ts) | O status do pedido e as notas são privados e só mudam por métodos que validam a regra. A senha nunca sai de `Usuario` (só `confereSenha()`). As cores da cantina só mudam por `mudarCores()`. Até para restaurar do armazenamento quem mexe no estado é a própria classe (`deDados()`). |
-| **Responsabilidade Única / Coesão** | Um caso de uso por arquivo, agrupados por acesso | `EstoqueDaCantina` cuida do estoque e do histórico, `ResumoDaCantina` só resume, `PainelDaCantina` só cuida da fila. A UI não tem regra de negócio, e o Resumo e o Estoque da tela ficam em módulos próprios ([`ui/cantina/`](../src/ui/cantina)). |
-| **Demeter** | `Produto.nivelDeEstoque()`, `Produto.darBaixa()` | Ninguém escreve `produto.politica.algo()`: quem usa conversa só com `Produto`. |
+| **Responsabilidade Única / Coesão** | Um caso de uso por arquivo, agrupados por acesso; uma aba por módulo em [`ui/cantina/`](../src/ui/cantina) | `EstoqueDaCantina` cuida do estoque e do histórico de onde sai o Resumo, `ReporEstoque` só do pedido ao fornecedor, `PainelDaCantina` só da fila. A `TelaCantina` só guarda o estado e traduz cliques em casos de uso; o HTML de cada aba (Pedidos, Resumo, Estoque, Cardápio, Novo produto, Configurações) fica no seu módulo. |
+| **Demeter** | `Produto.nivelDeEstoque()`, `Produto.reposicaoNecessaria()`, `Produto.darBaixa()` | Ninguém escreve `produto.politica.algo()`: quem usa conversa só com `Produto`. |
 | **Integridade conceitual** | Vocabulário único em código, telas e diagrama | Os três acessos têm os mesmos nomes em todo lugar (`cesar`, `cantina`, `estudante`), e as classes usam as palavras da cantina (pedido, cardápio, retirada, entrada, saída). |
+
+## Módulos profundos
+
+Seguindo o artigo [Módulos profundos](https://engsoftmoderna.info/artigos/deep-modules.html): interface
+pequena escondendo uma implementação grande, como o sistema de arquivos do Unix.
+
+| Onde na tela | Interface | O que fica escondido |
+|---|---|---|
+| Cantina → aba **Resumo** | [`resumirPeriodo(movimentos, periodo, agora)`](../src/dominio/estoque/resumirPeriodo.ts) | Início do período no calendário, filtragem, agrupamento por hora ou dia, totais e ranking |
+| Estudante → carrinho, **Agendar** | [`agendarCompra.executar(solicitacao)`](../src/aplicacao/estudante/AgendarCompra.ts) | Perfil, uma cantina por pedido, estoque, tempo de preparo e reserva "tudo ou nada" |
+| Cantina → aba **Estoque**, **Registrar** | [`estoque.registrar(quem, dados)`](../src/aplicacao/cantina/EstoqueDaCantina.ts) | Dono do produto, valor da venda, baixa ou reposição e registro no histórico |
+| Estudante → **escolha da cantina** | [`consultar.vitrine()`](../src/aplicacao/estudante/ConsultarCantinas.ts) | Itens de hoje e nota média de cada cantina |
+| Cantina → **Novo produto**, foto | [`reduzirImagem(arquivo)`](../src/ui/imagem.ts) | Leitura do arquivo, redução e compressão da foto |
+| Todas → dados | `salvar` / `buscarPorId` / `listar` | JSON, `localStorage` e reconstrução dos objetos |
+
+Os módulos rasos que encontramos foram corrigidos: o `ResumoDaCantina`, que só repassava a chamada,
+virou um método do `EstoqueDaCantina`; `ConsultarCantinas.listar()`, que só repassava o repositório,
+virou a `vitrine()`; e `precisaRepor()` + `sugestaoDeReposicao()` viraram uma pergunta só,
+`reposicaoNecessaria()`. Métodos curtos que ficaram, como `exigirPerfil()` e `primeiroNome`, valem
+pelo nome, como o `isEmpty()` do artigo.
 
 **Permissões nos casos de uso, não na tela** ([`autorizacao.ts`](../src/aplicacao/autorizacao.ts)): uma
 cantina não vê nem mexe nos pedidos e produtos de outra, um estudante não cancela nem avalia pedido

@@ -48,10 +48,6 @@ export class Produto {
     return this.politica.tempoDePreparoMin;
   }
 
-  get ehFeitoNaHora(): boolean {
-    return !ehReabastecivel(this.politica);
-  }
-
   /** Para não perecíveis; perecíveis não têm estoque e retornam undefined. */
   get quantidadeEmEstoque(): number | undefined {
     return ehReabastecivel(this.politica) ? this.politica.quantidadeEmEstoque : undefined;
@@ -102,12 +98,13 @@ export class Produto {
     this.noCardapio = true;
   }
 
-  precisaRepor(): boolean {
-    return ehReabastecivel(this.politica) && this.politica.precisaRepor();
-  }
-
-  sugestaoDeReposicao(): number {
-    return ehReabastecivel(this.politica) ? this.politica.sugestaoDeReposicao() : 0;
+  /**
+   * Quanto pedir ao fornecedor: zero enquanto o estoque está bom (ou se é feito na hora); abaixo
+   * da metade do ideal, o que falta para completar. Uma pergunta só esconde a regra e a conta.
+   */
+  reposicaoNecessaria(): number {
+    if (!ehReabastecivel(this.politica) || !this.politica.precisaRepor()) return 0;
+    return this.politica.sugestaoDeReposicao();
   }
 
   reabastecer(quantidade: number): void {

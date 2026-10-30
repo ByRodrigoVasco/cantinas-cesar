@@ -12,7 +12,7 @@ describe('Estoque da cantina (entradas e saídas fora do app)', () => {
   it('venda no balcão baixa o estoque e entra no faturamento', () => {
     c.casos.estoque.registrar(c.imperial.conta, { produtoId: c.refri.id, motivo: 'venda-balcao', quantidade: 2 });
     expect(c.produtos.buscarPorId(c.refri.id)?.quantidadeEmEstoque).toBe(2);
-    const resumo = c.casos.resumo.doPeriodo(c.imperial.conta, 'dia');
+    const resumo = c.casos.estoque.resumo(c.imperial.conta, 'dia');
     expect(resumo.faturamentoEmCentavos).toBe(1600);
     expect(resumo.vendidosNoBalcao).toBe(2);
   });
@@ -21,7 +21,7 @@ describe('Estoque da cantina (entradas e saídas fora do app)', () => {
     c.casos.estoque.registrar(c.imperial.conta, { produtoId: c.refri.id, motivo: 'perda', quantidade: 1 });
     c.casos.estoque.registrar(c.imperial.conta, { produtoId: c.refri.id, motivo: 'compra', quantidade: 5 });
     expect(c.produtos.buscarPorId(c.refri.id)?.quantidadeEmEstoque).toBe(8);
-    const resumo = c.casos.resumo.doPeriodo(c.imperial.conta, 'dia');
+    const resumo = c.casos.estoque.resumo(c.imperial.conta, 'dia');
     expect(resumo).toMatchObject({ faturamentoEmCentavos: 0, perdas: 1, entradas: 5 });
   });
 

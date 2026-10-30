@@ -86,7 +86,7 @@ describe('Pedidos do estudante', () => {
     const pedido = c.pedir(c.ana, '20:30', [[c.tapioca, 2], [c.refri, 1]]);
     c.casos.painel.marcarPronto(c.imperial.conta, pedido.numero);
     c.casos.meusPedidos.confirmarRetirada(c.ana, pedido.numero);
-    const resumo = c.casos.resumo.doPeriodo(c.imperial.conta, 'dia');
+    const resumo = c.casos.estoque.resumo(c.imperial.conta, 'dia');
     expect(resumo.faturamentoEmCentavos).toBe(2800);
     expect(resumo.pedidosDoApp).toBe(1);
   });
@@ -136,5 +136,17 @@ describe('Configurações da cantina', () => {
   it('recusa cor fora do formato', () => {
     expect(() => c.casos.configurar.mudarCores(c.imperial.conta, { principal: 'laranja', secundaria1: '#000000', secundaria2: '#ffffff' }))
       .toThrow('#RRGGBB');
+  });
+});
+
+describe('Vitrine de cantinas do estudante', () => {
+  it('cada cantina vem com itens de hoje e a nota média, prontos para mostrar', () => {
+    const pedido = c.pedir(c.ana, '20:30', [[c.tapioca, 1]]);
+    c.casos.painel.marcarPronto(c.imperial.conta, pedido.numero);
+    c.casos.meusPedidos.confirmarRetirada(c.ana, pedido.numero);
+    c.casos.meusPedidos.avaliarItem(c.ana, pedido.numero, c.tapioca.id, 4);
+    const imperial = c.casos.consultar.vitrine().find((v) => v.cantina.id === c.imperial.cantina.id);
+    expect(imperial).toMatchObject({ itensHoje: 2, avaliacao: { media: 4, quantidade: 1 } });
+    expect(c.casos.consultar.vitrine().find((v) => v.cantina.id === c.cafe.cantina.id)?.avaliacao).toBeUndefined();
   });
 });

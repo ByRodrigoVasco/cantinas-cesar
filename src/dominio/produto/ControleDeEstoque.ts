@@ -55,4 +55,8 @@ export class ControleDeEstoque implements PoliticaDeDisponibilidade, Reabasteciv
   paraDados(): PoliticaSalva {
     return { tipo: 'estoque', estoqueIdeal: this.estoqueIdeal, quantidade: this.quantidade };
   }
+
+  static deDados(salva: Extract<PoliticaSalva, { tipo: 'estoque' }>): ControleDeEstoque {
+    return new ControleDeEstoque(salva.estoqueIdeal, salva.quantidade);
+  }
 }

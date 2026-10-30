@@ -23,8 +23,9 @@ export class ReporEstoque {
     const cantinaId = cantinaDe(quem);
     return this.produtos
       .listar()
-      .filter((produto) => produto.cantinaId === cantinaId && produto.precisaRepor())
-      .map((produto) => ({ produto, quantidade: produto.sugestaoDeReposicao() }));
+      .filter((produto) => produto.cantinaId === cantinaId)
+      .map((produto) => ({ produto, quantidade: produto.reposicaoNecessaria() }))
+      .filter(({ quantidade }) => quantidade > 0);
   }
 
   mensagemParaFornecedor(quem: Usuario, nomeDaCantina: string): string {
