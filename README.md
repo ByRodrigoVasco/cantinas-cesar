@@ -1,41 +1,99 @@
-# 🛒 Cantina App - CESAR School (Entrega 1)
+# Cantina CESAR: 15 minutos, zero fila
 
-Aplicação interativa para gestão e autoatendimento de pedidos em cantina universitária, desenvolvida em Python para a P2 da CESAR School.
+PoC para o Hackathon Relâmpago #1 de FDS 2026.2 (cap. 5, *Engenharia de Software Moderna*).
 
----
+O aluno **agenda o lanche** para o horário do intervalo, a tia **prepara na ordem certa** e,
+com **um toque em "Pronto"**, o aluno recebe o aviso e vai direto ao balcão, sem fila.
 
-## 🚀 Funcionalidades
+## Por que esse app
 
-- **Cardápio Interativo:** Escolha de comidas e bebidas com atualização do valor total em tempo real.
-- **Opções de Consumo:** Consumo no local ou retirada no balcão.
-- **Validação Rigorosa de Horário:** Entrada no formato `HH:MM` para agendamento de retirada.
-- **Estimativa de Fila (SRP):** Cálculo automático do tempo de espera com alerta para o horário de pico escolar (`20:30`).
-- **Múltiplos Pagamentos (DIP / OCP):** Suporte a PIX, Cartão de Crédito, Cartão de Débito e Dinheiro (com cálculo de troco).
+Conversamos com a atendente da cantina durante o expediente:
 
----
+- **Tapioca** é a campeã de vendas, seguida da **coxinha**.
+- Ela anota os pedidos **no papel** e trabalha em dupla.
+- Alguns alunos já pedem antes ("quero uma coxinha para as X horas") e pagam. Assim **não pegam fila**.
+- Ela pediu: *"teria como comunicar com o aluno quando o pedido dele estivesse pronto"*.
+- Ela pede ao fornecedor **pelo WhatsApp** todos os dias, em duas entregas (manhã e 16h30).
 
-## 🛠️ Princípios de Programação Orientada a Objetos & SOLID
+Restrição da equipe: **a tia não pode ganhar trabalho novo.** Tudo o que dá para automatizar é automático.
 
-- **SRP (Single Responsibility Principle):** A classe `CalculadoraFila` possui responsabilidade única de estimar tempos de espera baseando-se no horário.
-- **OCP (Open/Closed Principle) & DIP (Dependency Inversion Principle):** A interface abstrata `FormaPagamento` permite adicionar novas formas de pagamento sem alterar o fluxo principal da aplicação.
+| Para o aluno | Para a tia (automático) |
+|---|---|
+| Cardápio do dia por categoria | Fila ordenada por "começar a preparar às…" |
+| Agendar com horário de retirada | Resumo para preparar em lote ("3× Tapioca") |
+| Aviso "pedido pronto" na tela | Estoque baixa sozinho; item zerado vira "Esgotado" |
+| Cancelar / pedir de novo | Lista de compras pronta para o WhatsApp + "entrega chegou" em 1 toque |
 
----
+Os casos de uso seguem o diagrama da equipe: *cadastrar produto (perecível / não perecível)*,
+*gerenciar estoque e cardápio*, *visualizar cardápio*, *agendar compra* e *visualizar pedidos agendados*.
+Também acrescentamos *avisar pedido pronto*, que a tia pediu.
 
-## 💻 Como Executar o Projeto
+## Como rodar
 
-1. Certifique-se de ter o Python 3.x instalado.
-2. Clone o repositório:
-   `git clone https://github.com/luan-arruda/Hackground-Rel-mpago.git`
-3. Acesse a pasta e execute a aplicação:
-   `python main.py`
+Requisito: Node.js 18+.
 
----
+```bash
+npm install
+npm run dev      # abre em http://localhost:5173
+npm test         # 31 testes de domínio e casos de uso
+```
 
-## 👥 Integrantes do Projeto
+A tela mostra o **app do aluno** e o **painel da cantina** lado a lado, para dar para ver o fluxo inteiro.
+Não há backend nem banco: os dados ficam em memória e voltam ao cardápio inicial a cada recarga.
 
-- **Luan Arruda**
-- **Anderson Campos**
-- **Rodrigo Vasco**
-- **João Vitor de Medeiros**
-- **Laura Brayner**
-- **Júlio Lins**
+## Stack e decisões
+
+- **TypeScript**: os tipos deixam explícitos os contratos (interfaces) que os princípios exigem.
+- **Vite** sem framework de UI: o foco da nota é o projeto das classes, não o front.
+- **Vitest**: testa domínio e casos de uso sem navegador, usando dublês das portas.
+- **Arquitetura em camadas**: cada camada só depende da de dentro.
+
+```
+src/
+├── dominio/      regras puras: Produto, políticas de disponibilidade, Pedido, Horario
+├── aplicacao/    casos de uso + portas (interfaces de repositório, notificador, relógio)
+├── infra/        implementações: memória, aviso na tela, relógio do sistema, cardápio inicial
+├── ui/           telas do aluno e da cantina (só desenham e repassam eventos)
+└── main.ts       raiz de composição: único lugar que conhece as classes concretas
+```
+
+## Onde estão os princípios do capítulo 5
+
+| Princípio | Onde | Por que melhora o projeto |
+|---|---|---|
+| **Composição em vez de herança** | [`Produto`](src/dominio/produto/Produto.ts) **tem uma** [`PoliticaDeDisponibilidade`](src/dominio/produto/PoliticaDeDisponibilidade.ts) | "Perecível" e "não perecível" não são subclasses de Produto. São comportamentos plugados ([`PreparoNaHora`](src/dominio/produto/PreparoNaHora.ts), [`ControleDeEstoque`](src/dominio/produto/ControleDeEstoque.ts)). Para criar um novo jeito de vender (ex.: "limitado por dia"), basta uma nova política. |
+| **Substituição de Liskov** | As duas políticas cumprem o mesmo contrato, testado em [`produto.test.ts`](tests/produto.test.ts) | Nenhuma lança "não suportado". `PreparoNaHora.liberar()` é um no-op legítimo: não havia estoque a devolver. |
+| **Segregação de Interfaces** | `Reabastecivel` separada de `PoliticaDeDisponibilidade` | Quem é feito na hora não é obrigado a implementar `reabastecer()` nem `precisaRepor()`. |
+| **Inversão de Dependências** | [`aplicacao/portas.ts`](src/aplicacao/portas.ts) + [`main.ts`](src/main.ts) | Os casos de uso dependem de `RepositorioDePedidos`, `Notificador` e `Relogio`, não de memória, tela ou `Date`. Por isso os testes usam um `RelogioParado` e um `NotificadorEspiao`. |
+| **Aberto/Fechado** | [`NotificadorComposto`](src/infra/notificadores.ts) | Um novo canal de aviso (som, WhatsApp, e-mail) é **uma classe nova** que implementa `Notificador`, mais uma linha em `main.ts`. Nenhuma classe existente muda. |
+| **Ocultamento de informação** | [`Pedido`](src/dominio/pedido/Pedido.ts) e [`Horario`](src/dominio/Horario.ts) | O status do pedido é privado e só muda por `marcarPronto()`, `confirmarRetirada()`, `cancelar()` e `desfazerPronto()`, que garantem a ordem válida. `Horario` esconde que guarda "minutos desde meia-noite". |
+| **Responsabilidade Única / Coesão** | Um caso de uso por arquivo em [`aplicacao/`](src/aplicacao) | `AgendarCompra` só agenda, `CancelarPedido` só cancela e `ReporEstoque` só cuida de compras. A UI não tem regra de negócio. |
+| **Demeter** | `Produto.precisaRepor()`, `Produto.tempoDePreparoMin` | Ninguém escreve `produto.politica.algo()`: quem usa conversa só com `Produto`. |
+| **Integridade conceitual** | Vocabulário único em todo o código | Os nomes das classes são as palavras da cantina (pedido, cardápio, retirada, reposição), os mesmos da UI e do diagrama de casos de uso. |
+
+## Usabilidade (heurísticas de Nielsen)
+
+- **Status visível:** selos *Agendado → Pronto! → Retirado*; aviso na tela do aluno; contadores nas abas da tia.
+- **Linguagem do usuário:** "Feito na hora", "Pronta-entrega", "Peguei!", "Entrega chegou".
+- **Controle e liberdade:** o aluno cancela (o estoque volta) e a tia desfaz um "Pronto" tocado por engano.
+- **Prevenção de erros:** o horário já vem no mais cedo possível; o "+" fica desabilitado quando acaba o estoque; um pedido inválido não altera nada.
+- **Reconhecimento em vez de memorização:** o carrinho mostra os itens; a tia vê "Receber R$ X" em cada pedido.
+- **Eficiência:** "Pedir de novo" para quem pede sempre a mesma coisa.
+- **Mensagens de erro úteis:** ex.: *"Não dá tempo de preparar: escolha a partir das 20:12."*
+- **Ajuda:** "Como funciona?" curto e recolhível em cada tela.
+
+## Dados a confirmar
+
+O cardápio inicial veio da foto do cardápio impresso (Imperial · Quiosque Brum). Ainda falta confirmar:
+
+- O **preço da tapioca** (ela não está no cardápio impresso; usamos R$ 10,00).
+- O **preço do Red Bull**, ilegível na foto (usamos R$ 13,60).
+- Os tempos de preparo e as quantidades de estoque, que são estimativas para a demonstração.
+
+## Equipe
+
+| Integrante | Papel |
+|---|---|
+| _a preencher_ | _a preencher_ |
+
+> IA utilizada: Claude Code (Anthropic) para gerar código, com revisão e decisões de projeto da equipe.
