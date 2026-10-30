@@ -7,6 +7,11 @@ pedidos, estoque e cardápio, e o **estudante** pede e avalia o que comeu.
 
 > **Hackathon Relâmpago (FDS, cap. 5):** [onde estão os princípios de projeto no código](docs/principios.md).
 
+## Demonstração
+
+- **App online:** [cantinas-cesar.vercel.app](https://cantinas-cesar.vercel.app/)
+- **Vídeo:** [assistir no YouTube](https://www.youtube.com/watch?v=wusz4GiqDT0)
+
 ## Tecnologias
 
 ![TypeScript](https://img.shields.io/badge/typescript-%233178C6.svg?style=for-the-badge&logo=typescript&logoColor=white)
